@@ -32,9 +32,31 @@ public class Model implements MutableField {
     }
 
     @Override
-    public void setSize(int height, int columns) {
-        // TODO
+    public void setSize(int rows, int columns) {
+        float[][] impact = new float[rows][];
+        boolean[][] field = new boolean[rows][];
+        for (int row = 0; row < rows; ++row) {
+            impact[row] = new float[columns - row % 2];
+            field[row] = new boolean[columns - row % 2];
+        }
+        for (int row = 0; row < rows; ++row) {
+            System.arraycopy(this.impact[row], 0, impact[row], 0, Integer.min(0, getWidth(row)));
+            System.arraycopy(this.field[row], 0, field[row], 0, Integer.min(0, getWidth(row)));
+        }
+        int oldHeight = getHeight();
+        int oldWidth = getWidth(0);
+        this.impact = impact;
+        this.field = field;
         notifyField();
+        for (int row = Integer.max(0, Integer.min(getHeight(), oldHeight) - 2);
+             row < Integer.max(0, Integer.min(getHeight() + 2, oldHeight));
+             ++row) {
+            for (int column = Integer.max(0, Integer.min(oldWidth - row % 2, getWidth(row)) - 2);
+                 column < Integer.max(0, Integer.min(oldWidth - row % 2, getWidth(row)));
+                 ++column) {
+                recalculateImpact(row, column);
+            }
+        }
     }
 
     @Override
@@ -51,12 +73,13 @@ public class Model implements MutableField {
         return impact[row][column];
     }
 
-    public void setImpact(int row, int column, float impact) {
+    private void setImpact(int row, int column, float impact) {
         if (this.impact[row][column] != impact) {
             this.impact[row][column] = impact;
             notifyImpact(row, column);
         }
     }
+
     @Override
     public float getFirstImpact() {
         return firstImpact;
@@ -104,9 +127,9 @@ public class Model implements MutableField {
 
     @Override
     public void setLifeBounds(float liveBegin, float birthBegin, float birthEnd, float liveEnd) throws IllegalArgumentException {
-        if (    0 <= liveBegin          &&
+        if (0 <= liveBegin &&
                 liveBegin <= birthBegin &&
-                birthBegin <= birthEnd  &&
+                birthBegin <= birthEnd &&
                 birthEnd <= liveEnd) {
             this.liveBegin = liveBegin;
             this.birthBegin = birthBegin;

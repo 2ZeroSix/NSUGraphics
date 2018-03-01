@@ -1,6 +1,5 @@
 package life_hexagon;
 
-import javax.swing.*;
 import java.awt.*;
 
 public class Hexagon {
@@ -12,7 +11,7 @@ public class Hexagon {
     private Color fillColor = Color.RED;
     private int[][] dots = new int[2][6];
 
-    void recalcDots() {
+    void recalculateDots() {
         double angle = Math.PI / 2.;
         for (int i = 0; i < 6; ++i) {
             angle += Math.PI / 3.;
@@ -26,7 +25,7 @@ public class Hexagon {
         this.y = y;
         this.radius = radius;
         this.borderWidth = borderWidth;
-        recalcDots();
+        recalculateDots();
     }
 
     public Hexagon() {
@@ -34,8 +33,8 @@ public class Hexagon {
     }
 
     public void draw(MyImage image) {
-        image.drawPolygon(dots[0], dots[1], 6, borderColor, borderWidth);
-        image.spanFill(x, y, fillColor, borderColor);
+        image.getMyGraphics().drawPolygon(dots[0], dots[1], 6, borderColor, borderWidth);
+        image.getMyGraphics().spanFill(x, y, fillColor, borderColor);
     }
 
     public int getX() {
@@ -44,7 +43,7 @@ public class Hexagon {
 
     public Hexagon setX(int x) {
         this.x = x;
-        recalcDots();
+        recalculateDots();
         return this;
     }
 
@@ -54,7 +53,7 @@ public class Hexagon {
 
     public Hexagon setY(int y) {
         this.y = y;
-        recalcDots();
+        recalculateDots();
         return this;
     }
 
@@ -64,7 +63,7 @@ public class Hexagon {
 
     public Hexagon setRadius(int radius) {
         this.radius = radius;
-        recalcDots();
+        recalculateDots();
         return this;
     }
 

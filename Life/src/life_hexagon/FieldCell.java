@@ -17,20 +17,21 @@ public class FieldCell extends Hexagon{
     }
 
     public Point calculateSize(int rows, int columns) {
-        // TODO fix
+        // TODO fix size, current bigger than needed
         return calculatePosition(rows, columns);
     }
 
     private Point calculatePosition(int row, int column) {
         double width = getRadius()*Math.cos(Math.PI/3);
         double height = getRadius();
-        double verticalShift    = getBorderWidth() / 2 + height * (1 - 2 * ((row + 1) % 2));
-        double verticalStep     = 2 * height;
+        // TODO add border to shift and step
         double horizontalShift  = getBorderWidth() / 2 + width * (2 * (row % 2) + 1);
         double horizontalStep   = 2 * width;
+        double verticalShift    = height * (1 - 2 * ((row + 1) % 2));
+        double verticalStep     = 2 * height;
         return new Point(
-                (int)(horizontalShift + horizontalStep * row),
-                (int)(verticalShift + verticalStep * column)
+                (int)(horizontalShift + horizontalStep * column),
+                (int)(verticalShift + verticalStep * row)
         );
     }
 

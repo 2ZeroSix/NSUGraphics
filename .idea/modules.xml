@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/Life/Life.iml" filepath="$PROJECT_DIR$/Life/Life.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/g15206_lukin.iml" filepath="$PROJECT_DIR$/.idea/g15206_lukin.iml" />
+    </modules>
+  </component>
+</project>
