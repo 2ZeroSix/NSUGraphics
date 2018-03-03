@@ -1,12 +1,6 @@
-package life_hexagon;
+package life_hexagon.view;
 
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-
-import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.awt.image.ImageObserver;
-import java.text.AttributedCharacterIterator;
-import java.util.Stack;
 
 public class MyImage extends BufferedImage {
 

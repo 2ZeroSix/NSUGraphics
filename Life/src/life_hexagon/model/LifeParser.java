@@ -1,4 +1,6 @@
-package life_hexagon;
+package life_hexagon.model;
+
+import life_hexagon.observables.MutableFieldObservable;
 
 import java.util.Scanner;
 
@@ -14,7 +16,7 @@ public class LifeParser {
     int getCellSize() {
         return cellSize;
     }
-    void setField(MutableField field) {
+    void setField(MutableFieldObservable field) {
 
     }
 }

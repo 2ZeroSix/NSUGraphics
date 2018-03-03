@@ -1,9 +1,11 @@
-package life_hexagon;
+package life_hexagon.controller;
+
+import life_hexagon.observables.MutableFieldObservable;
 
 import javax.swing.*;
 
 public class Controller {
-    MutableField field;
+    MutableFieldObservable field;
     Timer timer;
     public Controller() {
 

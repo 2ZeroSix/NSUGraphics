@@ -1,6 +1,6 @@
-package life_hexagon;
+package life_hexagon.observables;
 
-public interface MutableField extends Field {
+public interface MutableFieldObservable extends FieldObservable {
     void setSize(int rows, int columns);
     void setState(int row, int column, boolean state);
     void setFirstImpact(float firstImpact);

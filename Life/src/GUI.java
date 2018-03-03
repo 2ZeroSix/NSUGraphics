@@ -1,8 +1,10 @@
-import life_hexagon.*;
+import life_hexagon.model.Model;
+import life_hexagon.view.FieldView;
+import life_hexagon.view.Hexagon;
+import life_hexagon.view.MyImage;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.image.BufferedImage;
 
 public class GUI extends JFrame {
 

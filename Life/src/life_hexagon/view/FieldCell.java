@@ -1,4 +1,6 @@
-package life_hexagon;
+package life_hexagon.view;
+
+import life_hexagon.observables.FieldObservable;
 
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
@@ -35,34 +37,34 @@ public class FieldCell extends Hexagon{
         );
     }
 
-    private Color calculateFillColor(Field field, int x, int y) {
-        boolean state = field.getState(x, y);
-        float impact = field.getImpact(x, y);
+    private Color calculateFillColor(FieldObservable fieldFieldObservable, int x, int y) {
+        boolean state = fieldFieldObservable.getState(x, y);
+        float impact = fieldFieldObservable.getImpact(x, y);
         if (state) {
-            return calculateFillColor(field, impact, ALIVE, ALIVE_NEARLY_DEAD, ALIVE_NEXT_DEAD);
+            return calculateFillColor(fieldFieldObservable, impact, ALIVE, ALIVE_NEARLY_DEAD, ALIVE_NEXT_DEAD);
         } else {
-            return calculateFillColor(field, impact, DEAD_NEXT_ALIVE, DEAD_NEARLY_ALIVE, DEAD);
+            return calculateFillColor(fieldFieldObservable, impact, DEAD_NEXT_ALIVE, DEAD_NEARLY_ALIVE, DEAD);
         }
     }
 
-    private Color calculateFillColor(Field field, float impact, Color next, Color nearly, Color normal) {
-        if (field.getBirthBegin() <= impact && impact <= field.getBirthEnd()) {
+    private Color calculateFillColor(FieldObservable fieldFieldObservable, float impact, Color next, Color nearly, Color normal) {
+        if (fieldFieldObservable.getBirthBegin() <= impact && impact <= fieldFieldObservable.getBirthEnd()) {
             return next;
-        } else if (field.getLiveBegin() <= impact && impact <= field.getLiveEnd()) {
+        } else if (fieldFieldObservable.getLiveBegin() <= impact && impact <= fieldFieldObservable.getLiveEnd()) {
             return nearly;
         } else {
             return normal;
         }
     }
 
-    public void draw(MyImage image, Field field, int row, int column) {
-        setFillColor(calculateFillColor(field, row, column));
+    public void draw(MyImage image, FieldObservable fieldFieldObservable, int row, int column) {
+        setFillColor(calculateFillColor(fieldFieldObservable, row, column));
         Point pos = calculatePosition(row, column);
         setX(pos.x).setY(pos.y);
         super.draw(image);
         Graphics2D g = image.createGraphics();
         g.setPaint(textColor);
-        float impactValue = field.getImpact(row, column);
+        float impactValue = fieldFieldObservable.getImpact(row, column);
         String impact;
         if (impactValue == (long)impactValue) {
             impact = String.format("%d", (long)impactValue);

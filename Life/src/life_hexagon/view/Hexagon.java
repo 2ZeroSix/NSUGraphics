@@ -1,4 +1,4 @@
-package life_hexagon;
+package life_hexagon.view;
 
 import java.awt.*;
 

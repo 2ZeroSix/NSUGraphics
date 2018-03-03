@@ -1,9 +1,12 @@
-package life_hexagon;
+package life_hexagon.model;
+
+import life_hexagon.observers.FieldObserver;
+import life_hexagon.observables.MutableFieldObservable;
 
 import java.util.HashSet;
 import java.util.Set;
 
-public class Model implements MutableField {
+public class Model implements MutableFieldObservable {
 
     private Set<FieldObserver> observers;
 
