@@ -1,5 +1,6 @@
 package life_hexagon.view;
 
+import java.awt.*;
 import java.awt.image.BufferedImage;
 
 public class MyImage extends BufferedImage {
@@ -12,5 +13,4 @@ public class MyImage extends BufferedImage {
     public MyGraphics getMyGraphics() {
         return new MyGraphics(this);
     }
-
 }

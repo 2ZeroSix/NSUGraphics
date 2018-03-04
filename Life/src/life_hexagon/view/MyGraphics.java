@@ -1,6 +1,7 @@
 package life_hexagon.view;
 
 import java.awt.*;
+import java.awt.geom.Rectangle2D;
 import java.util.Stack;
 import java.util.function.Predicate;
 
@@ -114,7 +115,8 @@ public class MyGraphics {
 
     public void spanFill(int x, int y, Color color, Color border) {
         Stack<Point> stack = new Stack<>();
-        stack.push(new Point(x, y));
+        if (isValid(x, y))
+            stack.push(new Point(x, y));
         int w = image.getWidth();
         int h = image.getHeight();
         boolean spanLeft, spanRight;
@@ -131,7 +133,7 @@ public class MyGraphics {
 
             spanLeft = false;
             spanRight = false;
-
+//            if (p.y >= 0)
             while (p.y < h && isOldColor.test(p)) {
                 drawPixelUnsafe(p.x, p.y, color);
 
@@ -153,6 +155,14 @@ public class MyGraphics {
 
                 --p.x;
                 ++p.y;
+            }
+        }
+    }
+
+    public void fillRectangle(Rectangle2D r, Color fillColor) {
+        for (int x = Integer.max((int) r.getMinX(), 0); x < Integer.min((int) r.getMaxX(), image.getWidth()); ++x) {
+            for (int y = Integer.max((int) r.getMinY(), 0); y < Integer.min((int) r.getMaxY(), image.getWidth()); ++y) {
+                drawPixel(x, y, fillColor);
             }
         }
     }
