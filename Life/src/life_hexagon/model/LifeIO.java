@@ -31,6 +31,7 @@ public class LifeIO {
     private int height;
 
     public void parse(Scanner scanner) throws LifeIOException {
+        scanner.useDelimiter("([\\v\\h]+)|([\\v\\h]*(//)?.*[\\v]+)");
         try {
             if (!scanner.hasNextInt()) throw new LifeIOException("wrong format: max width expected");
             width = scanner.nextInt();
@@ -49,7 +50,7 @@ public class LifeIO {
                 if (!scanner.hasNextInt())
                     throw new LifeIOException("wrong format: second coordinate of point expected");
                 int row = scanner.nextInt();
-                alive.set(i, new Point(row, column));
+                alive.set(i, new Point(column, row));
             }
         } catch (Exception ex) {
             alive = null;
@@ -83,8 +84,11 @@ public class LifeIO {
 
     public void setField(MutableFieldObservable field) {
         field.setSize(height, width);
-        for (Point p : alive) {
-            field.setState(p.x, p.y, true);
+        Point p = new Point();
+        for (p.y = 0; p.y < field.getHeight(); ++p.y) {
+            for (p.x = 0; p.x < field.getWidth(p.y); ++p.x) {
+                field.setState(p.y, p.x, alive.contains(p));
+            }
         }
     }
 }

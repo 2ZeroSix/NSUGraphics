@@ -3,8 +3,10 @@ package life_hexagon.controller;
 import life_hexagon.model.LifeIO;
 import life_hexagon.model.ModelFactory;
 import life_hexagon.model.observables.MutableDisplayModelObservable;
+import life_hexagon.model.observables.MutableEditModelObservable;
 import life_hexagon.model.observables.MutableFieldObservable;
 import life_hexagon.view.observers.DisplayModelObserver;
+import life_hexagon.view.observers.EditModelObserver;
 import life_hexagon.view.observers.FieldObserver;
 
 import javax.swing.*;
@@ -13,48 +15,61 @@ import java.io.*;
 import java.util.Scanner;
 
 public class Controller {
+    private ModelFactory modelFactory;
     private MutableFieldObservable field;
     private MutableDisplayModelObservable display;
-    private Timer timer;
-    private boolean xorMode = true;
-    private ModelFactory modelFactory;
+    private MutableEditModelObservable editModel;
+    private boolean fill = true;
     private Point lastTouch = null;
 
     public Controller(ModelFactory modelFactory) {
         this.modelFactory = modelFactory;
-        this.timer = new Timer(1000, e -> field.step());
         this.display = modelFactory.createDisplayModel();
         this.field = modelFactory.createField();
-        this.field.setSize(100, 100);
+        this.editModel = modelFactory.createEditModel();
+        this.editModel.setLoopTimer(new Timer(1000, e -> field.step()));
     }
 
-    public void addFieldObserver(FieldObserver observer) {
+    public synchronized void addFieldObserver(FieldObserver observer) {
         field.addObserver(observer);
     }
 
-    public void removeFieldObserver(FieldObserver observer) {
+    public synchronized void removeFieldObserver(FieldObserver observer) {
         field.removeObserver(observer);
     }
 
-    public void addDisplayModelObserver(DisplayModelObserver observer) {
+    public synchronized void addDisplayModelObserver(DisplayModelObserver observer) {
         display.addObserver(observer);
     }
 
-    public void removeDisplayObserver(DisplayModelObserver observer) {
+    public synchronized void removeDisplayObserver(DisplayModelObserver observer) {
         display.removeObserver(observer);
     }
 
-    private void reset() {
-        timer.stop();
-        xorMode = false;
+    public synchronized void addEditModelObserver(EditModelObserver observer) {
+        editModel.addObserver(observer);
     }
 
-    public void newDocument(int width, int height) {
+    public synchronized void removeEditModelObserver(EditModelObserver observer) {
+        editModel.removeObserver(observer);
+    }
+
+    private synchronized void reset() {
+        editModel.setLoop(false);
+        lastTouch = null;
+    }
+
+    public synchronized void newDocument(int width, int height) {
         reset();
-        field.setSize(height, width);
+        for (int row = 0; row < field.getHeight(); ++row) {
+            for (int column = 0; column < field.getWidth(row); ++column) {
+                field.setState(row, column, false);
+            }
+        }
+            field.setSize(height, width);
     }
 
-    public void openDocument(String fileName) throws LifeIO.LifeIOException {
+    public synchronized void openDocument(String fileName) throws LifeIO.LifeIOException {
         reset();
         try (FileInputStream inputStream = new FileInputStream(fileName)) {
             Scanner scanner = new Scanner(inputStream);
@@ -71,8 +86,8 @@ public class Controller {
         }
     }
 
-    public void saveDocument(String fileName) throws LifeIO.LifeIOException {
-        if (field != null && !timer.isRunning()) {
+    public synchronized void saveDocument(String fileName) throws LifeIO.LifeIOException {
+        if (!editModel.isLoop()) {
             try (PrintStream stream = new PrintStream(fileName)) {
                 LifeIO lifeIO = new LifeIO();
                 lifeIO.write(stream, display, field);
@@ -83,33 +98,43 @@ public class Controller {
     }
 
 
-    public void clearTouch() {
+    public synchronized void clearTouch() {
         lastTouch = null;
     }
 
-    public void touchCell(int row, int column) {
-        if (!timer.isRunning() && (lastTouch == null || !(row == lastTouch.y && column == lastTouch.x))
+    public synchronized void touchCell(int row, int column, boolean fill) {
+        if (!editModel.isLoop() && (lastTouch == null || !(row == lastTouch.y && column == lastTouch.x))
                 && row >= 0 && row < field.getHeight() && column >= 0 && column < field.getWidth(row)) {
-            field.setState(row, column, field.getState(row, column) ^ xorMode || !xorMode);
+            boolean xorMode = editModel.isXOR();
+            field.setState(row, column, xorMode && !field.getState(row, column) || !xorMode && fill);
+            this.fill = fill;
             lastTouch = new Point(column, row);
         }
     }
 
-    public void toggleLoopMode(boolean on) {
-        if (timer.isRunning() && !on) {
-            timer.stop();
-        } else if (!timer.isRunning() && on){
-            timer.start();
-        }
+    public synchronized void touchCell(int row, int column) {
+        touchCell(row, column, fill);
     }
 
-    public void toggleXORMode(boolean on) {
-        xorMode = on;
+    public synchronized void toggleLoopMode() {
+        editModel.setLoop(!editModel.isLoop());
     }
 
-    public void makeStep() {
-        if (!timer.isRunning())
+    public synchronized void toggleXORMode() {
+        editModel.setXOR(!editModel.isXOR());
+    }
+
+    public synchronized void toggleXORMode(boolean mode) {
+        editModel.setXOR(mode);
+    }
+
+    public synchronized void makeStep() {
+        if (!editModel.isLoop())
             field.step();
     }
 
+    public synchronized void resize(int width, int height) {
+        if (!editModel.isLoop())
+            field.setSize(height, width);
+    }
 }

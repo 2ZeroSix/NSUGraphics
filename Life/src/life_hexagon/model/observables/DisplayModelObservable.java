@@ -9,7 +9,7 @@ public interface DisplayModelObservable {
 
     boolean isDisplayImpact();
 
-    void notifyDisplayMode();
+    void notifyDisplay();
 
     void notifyBorderWidth();
 

@@ -6,8 +6,10 @@ import life_hexagon.view.observers.DisplayModelObserver;
 
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+import java.util.List;
 
-public class FieldCell extends Hexagon implements DisplayModelObserver {
+public class FieldCell extends Hexagon {
     static Color textColor = new Color(0x010101);
     static Color DEAD = (new Color(0xFFFFFF));
     static Color DEAD_NEXT_ALIVE = (new Color(0xFF8C14));
@@ -22,9 +24,9 @@ public class FieldCell extends Hexagon implements DisplayModelObserver {
     }
 
 
-    private Color calculateFillColor(FieldObservable fieldFieldObservable, int x, int y) {
-        boolean state = fieldFieldObservable.getState(x, y);
-        float impact = fieldFieldObservable.getImpact(x, y);
+    private Color calculateFillColor(FieldObservable fieldFieldObservable, int row, int column) {
+        boolean state = fieldFieldObservable.getState(row, column);
+        float impact = fieldFieldObservable.getImpact(row, column);
         if (state) {
             return calculateFillColor(fieldFieldObservable, impact, ALIVE, ALIVE_NEARLY_DEAD, ALIVE_NEXT_DEAD);
         } else {
@@ -42,72 +44,49 @@ public class FieldCell extends Hexagon implements DisplayModelObserver {
         }
     }
 
-    public void draw(MyImage image, FieldObservable fieldFieldObservable, int row, int column) {
-        setFillColor(calculateFillColor(fieldFieldObservable, row, column));
+
+    public void draw(MyImage image, FieldObservable field, int row, int column) {
+        setFillColor(calculateFillColor(field, row, column));
         Point pos = calculatePositionOnScreen(row, column);
         super.setX(pos.x).setY(pos.y).draw(image);
         if (isPrintImpact()) {
-            {
-                MyGraphics mg = image.getMyGraphics();
-                int R = getRadius();
-                int r = (int) (R * Math.sqrt(3) / 2);
-                mg.fillRectangle(new Rectangle(getX() - r, getY() - R / 2, r*2, R), getFillColor());
-            }
-            Graphics2D g = image.createGraphics();
-            g.setPaint(textColor);
-            float impactValue = fieldFieldObservable.getImpact(row, column);
-            String impact;
-            if (impactValue == (long) impactValue) {
-                impact = String.format("%d", (long) impactValue);
-            } else {
-                impact = String.format("%.2f", impactValue);
-            }
-            Font font = new Font("Serif", Font.PLAIN, 10);
-            g.setFont(font);
-            FontMetrics fm = g.getFontMetrics();
-            Rectangle2D r = fm.getStringBounds(impact, g);
-            if (r.getWidth() <= getRadius() * Math.cos(Math.PI / 3) * 2 &&
-                    r.getHeight() <= getRadius() * Math.sin(Math.PI / 3) * 2) {
-                int startX = getX() - (int) r.getWidth() / 2;
-                int startY = getY() - (int) r.getHeight() / 2 + fm.getAscent();
-                g.drawString(impact, startX, startY);
-            } else {
-                impact = String.format("%d", (long) impactValue);
-                font = new Font("Serif", Font.PLAIN, 10);
-                g.setFont(font);
-                fm = g.getFontMetrics();
-                r = fm.getStringBounds(impact, g);
-                if (r.getWidth() <= getRadius() * Math.cos(Math.PI / 3) * 2 &&
-                        r.getHeight() <= getRadius() * Math.sin(Math.PI / 3) * 2) {
-                    int startX = getX() - (int) r.getWidth() / 2;
-                    int startY = getY() - (int) r.getHeight() / 2 + fm.getAscent();
-                    g.drawString(impact, startX, startY);
-                }
-            }
-            g.dispose();
+            drawImpact(image, field, row, column);
         }
     }
 
-    @Override
-    public void updateDisplayMode(DisplayModelObservable displayModel) {
-        updateBorderWidth(displayModel);
-        updateDisplayImpact(displayModel);
-        updateHexagonSize(displayModel);
-    }
-
-    @Override
-    public void updateBorderWidth(DisplayModelObservable displayModel) {
-        setBorderWidth(displayModel.getBorderWidth());
-    }
-
-    @Override
-    public void updateHexagonSize(DisplayModelObservable displayModel) {
-        setRadius(displayModel.getHexagonSize());
-    }
-
-    @Override
-    public void updateDisplayImpact(DisplayModelObservable displayModel) {
-        setPrintImpact(displayModel.isDisplayImpact());
+    public void drawImpact(MyImage image, FieldObservable field, int row, int column) {
+        {
+            MyGraphics mg = image.getMyGraphics();
+            int R = getRadius();
+            int r = (int) (R * Math.sqrt(3) / 2);
+            mg.fillRectangle(new Rectangle(getX() - r, getY() - R / 2, r*2, R), getFillColor());
+        }
+        if (isPrintImpact()) {
+            Graphics2D g = image.createGraphics();
+            g.setPaint(textColor);
+            float impactValue = field.getImpact(row, column);
+            List<String> impactStrings = new ArrayList<>();
+            if (impactValue != (long) impactValue) {
+                impactStrings.add(String.format("%.2f", impactValue));
+                impactStrings.add(String.format("%.1f", impactValue));
+            }
+            impactStrings.add(String.format("%d", (long) impactValue));
+            Font font = new Font("Serif", Font.PLAIN, 10);
+            g.setFont(font);
+            FontMetrics fm = g.getFontMetrics();
+            for (String impact : impactStrings) {
+                Rectangle2D r = fm.getStringBounds(impact, g);
+                if (r.getWidth() <= getRadius() * Math.sqrt(3) &&
+                        r.getHeight() <= getRadius() * 2) {
+                    int startX = getX() - (int) r.getWidth() / 2;
+                    int startY = getY() - (int) r.getHeight() / 2 + fm.getAscent();
+                    g.drawString(impact, startX, startY);
+                    break;
+                }
+            }
+            impactStrings.clear();
+            g.dispose();
+        }
     }
 
     public boolean isPrintImpact() {
@@ -147,7 +126,7 @@ public class FieldCell extends Hexagon implements DisplayModelObserver {
             double r = (getRadius() * Math.sqrt(3) / 2);
             int R = getRadius();
             int borderWidth = getBorderWidth();
-            // TODO add border to shift and step
+            // TODO add border to shift and step properly
             int horizontalShift = (int) (r) + getBorderWidth();
             int horizontalStep = (int) (2 * r) + getBorderWidth();
             int verticalShift = R + getBorderWidth() / 2;
@@ -156,28 +135,36 @@ public class FieldCell extends Hexagon implements DisplayModelObserver {
             int rowShift = point.y % verticalStep;
 
             if (rowShift < R / 2) {
+
                 for (int i = -1; i <= 0; ++i) {
                     if (row + i >= 0) {
-                        int nearestColumn = point.x - horizontalShift * ((row + i) % 2);
-                        if (nearestColumn >= 0) {
-                            int column = (nearestColumn) / horizontalStep;
+                        int nearestColumnOnScreen = point.x - horizontalShift * ((row + i) % 2);
+//                        if (nearestColumnOnScreen >= 0) {
+                            int column = (nearestColumnOnScreen) / horizontalStep;
                             Point p = calculatePositionOnScreen(row + i, column);
                             hex.setX(p.x).setY(p.y);
                             if (hex.isInside(point)) {
                                 result = new Point(column, row + i);
                                 break;
                             }
-                        }
+//                        }
                     }
                 }
             } else {
-                int nearestColumn = point.x - horizontalShift * ((row) % 2);
-                if (nearestColumn >= 0) {
-                    int column = (nearestColumn) / horizontalStep;
+                int nearestColumnOnScreen = point.x - horizontalShift * ((row) % 2);
+                int column = (nearestColumnOnScreen) / horizontalStep;
+                Point p = calculatePositionOnScreen(row, column);
+                hex.setX(p.x).setY(p.y);
+                if (hex.isInside(point)) {
                     result = new Point(column, row);
                 }
+//                if (nearestColumnOnScreen >= 0) {
+//                    int column = (nearestColumnOnScreen) / horizontalStep;
+//                    result = new Point(column, row);
+//                }
             }
         }
         return result;
     }
+
 }

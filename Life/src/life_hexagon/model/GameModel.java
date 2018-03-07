@@ -41,16 +41,22 @@ public class GameModel implements MutableFieldObservable {
         int oldWidth = getWidth(0);
         this.impact = impact;
         this.field = field;
-        notifyField();
-        for (int row = Integer.max(0, Integer.min(getHeight(), oldHeight) - 2);
-             row < Integer.max(0, Integer.min(getHeight() + 2, oldHeight));
+        notifySize();
+        for (int row = Integer.max(0, Integer.min(rows, oldHeight) - 2);
+             row < Integer.max(0, Integer.min(rows, oldHeight + 3));
              ++row) {
-            for (int column = Integer.max(0, Integer.min(oldWidth - row % 2, getWidth(row)) - 2);
-                 column < Integer.max(0, Integer.min(oldWidth - row % 2, getWidth(row)));
+            for (int column = 0; column < columns - row % 2; ++column) {
+                recalculateImpact(row, column);
+            }
+        }
+        for (int row = 0; row < rows; ++row) {
+            for (int column = Integer.max(0, Integer.min(oldWidth, columns) - row % 2 - 2);
+                 column < Integer.max(0, Integer.min(oldWidth + 3, columns) - row % 2);
                  ++column) {
                 recalculateImpact(row, column);
             }
         }
+
     }
 
     @Override
@@ -61,6 +67,14 @@ public class GameModel implements MutableFieldObservable {
             notifyState(row, column);
         }
     }
+
+    private void setStateWithoutImpact(int row, int column, boolean state) {
+        if (state != field[row][column]) {
+            field[row][column] = state;
+            notifyState(row, column);
+        }
+    }
+
 
     @Override
     public float getImpact(int row, int column) {
@@ -137,7 +151,7 @@ public class GameModel implements MutableFieldObservable {
 
     @Override
     public int getWidth(int row) {
-        return Integer.max(field.length - row % 2, 0);
+        return field.length == 0 ? 0 : Integer.max(field[0].length - row % 2, 0);
     }
 
     @Override
@@ -259,9 +273,9 @@ public class GameModel implements MutableFieldObservable {
 
     private void recalculateImpact(int row, int column, boolean state) {
         // TODO optimize
-        for (int x = Integer.max(row - 2, 0); x < Integer.min(row + 3, getHeight()); ++x) {
-            for (int y = Integer.max(column - 2, 0); y < Integer.min(column + 3, getWidth(x)); ++y) {
-                recalculateImpact(x, y);
+        for (int r = Integer.max(row - 2, 0); r < Integer.min(row + 3, getHeight()); ++r) {
+            for (int c = Integer.max(column - 2, 0); c < Integer.min(column + 3, getWidth(r)); ++c) {
+                recalculateImpact(r, c);
             }
         }
     }
@@ -278,9 +292,9 @@ public class GameModel implements MutableFieldObservable {
         for (int row = 0; row < getHeight(); ++row) {
             for (int column = 0; column < getWidth(row); ++column) {
                 if (field[row][column]) {
-                    setState(row, column, liveBegin <= impact[row][column] && impact[row][column] <= liveEnd);
+                    setStateWithoutImpact(row, column, liveBegin <= impact[row][column] && impact[row][column] <= liveEnd);
                 } else {
-                    setState(row, column, birthBegin <= impact[row][column] && impact[row][column] <= birthEnd);
+                    setStateWithoutImpact(row, column, birthBegin <= impact[row][column] && impact[row][column] <= birthEnd);
                 }
             }
         }
@@ -339,5 +353,4 @@ public class GameModel implements MutableFieldObservable {
             observer.updateImpact(this);
         }
     }
-
 }

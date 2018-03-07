@@ -1,6 +1,5 @@
 package life_hexagon.model;
 
-import life_hexagon.model.observables.DisplayModelObservable;
 import life_hexagon.model.observables.MutableDisplayModelObservable;
 import life_hexagon.view.observers.DisplayModelObserver;
 
@@ -21,13 +20,19 @@ public class DisplayModel implements MutableDisplayModelObservable{
 
     @Override
     public MutableDisplayModelObservable setBorderWidth(int width) {
-        this.borderWidth = width;
+        if (this.borderWidth != width) {
+            this.borderWidth = width;
+            notifyBorderWidth();
+        }
         return this;
     }
 
     @Override
     public MutableDisplayModelObservable setHexagonSize(int size) {
-        this.hexagonSize = size;
+        if (this.hexagonSize != size) {
+            this.hexagonSize = size;
+            notifyHexagonSize();
+        }
         return this;
     }
 
@@ -48,7 +53,10 @@ public class DisplayModel implements MutableDisplayModelObservable{
 
     @Override
     public MutableDisplayModelObservable setDisplayImpact(boolean displayImpact) {
-        this.displayImpact = displayImpact;
+        if (displayImpact != this.displayImpact) {
+            this.displayImpact = displayImpact;
+            notifyDisplayImpact();
+        }
         return this;
     }
 
@@ -74,16 +82,16 @@ public class DisplayModel implements MutableDisplayModelObservable{
     }
 
     @Override
-    public void notifyDisplayMode() {
+    public void notifyDisplay() {
         for (DisplayModelObserver observer : observers) {
-            observer.updateDisplayMode(this);
+            observer.updateDisplay(this);
         }
     }
 
     @Override
     public void addObserver(DisplayModelObserver observer) {
         observers.add(observer);
-        observer.updateDisplayMode(this);
+        observer.updateDisplay(this);
     }
 
     @Override

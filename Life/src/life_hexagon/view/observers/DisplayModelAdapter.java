@@ -4,7 +4,7 @@ import life_hexagon.model.observables.DisplayModelObservable;
 
 public class DisplayModelAdapter implements DisplayModelObserver {
     @Override
-    public void updateDisplayMode(DisplayModelObservable displayModel) {
+    public void updateDisplay(DisplayModelObservable displayModel) {
 
     }
 

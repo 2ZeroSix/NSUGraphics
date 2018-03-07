@@ -1,6 +1,7 @@
 package life_hexagon.model;
 
 import life_hexagon.model.observables.MutableDisplayModelObservable;
+import life_hexagon.model.observables.MutableEditModelObservable;
 import life_hexagon.model.observables.MutableFieldObservable;
 
 public class ModelFactoryImpl implements ModelFactory {
@@ -22,6 +23,11 @@ public class ModelFactoryImpl implements ModelFactory {
 
     @Override
     public MutableDisplayModelObservable createDisplayModel() {
-        return new DisplayModel(1, 10, true);
+        return new DisplayModel(1, 30, true);
+    }
+
+    @Override
+    public MutableEditModelObservable createEditModel() {
+        return new EditModel(true);
     }
 }
