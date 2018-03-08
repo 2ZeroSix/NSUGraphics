@@ -23,6 +23,7 @@ public class OptionsFrame extends JFrame implements FieldObserver, EditModelObse
     private JFormattedTextField height;
     private JFormattedTextField borderWidth;
     private JFormattedTextField hexSize;
+    private ButtonGroup group;
     private JRadioButton xorButton;
     private JRadioButton replaceButton;
     public OptionsFrame(Controller controller) {
@@ -42,11 +43,8 @@ public class OptionsFrame extends JFrame implements FieldObserver, EditModelObse
             {
                 width = new JFormattedTextField(format);
                 width.setColumns(5);
-                width.addFocusListener(new FocusAdapter() {
-                    @Override
-                    public void focusLost(FocusEvent focusEvent) {
-                        controller.resize(((Number) width.getValue()).intValue(), field.getHeight());
-                    }
+                width.addPropertyChangeListener("value", evt -> {
+                    controller.resize(((Number) width.getValue()).intValue(), field.getHeight());
                 });
                 c.gridx = 1;
                 c.gridy = 0;
@@ -61,30 +59,42 @@ public class OptionsFrame extends JFrame implements FieldObserver, EditModelObse
             {
                 height = new JFormattedTextField(format);
                 height.setColumns(5);
-                height.addFocusListener(new FocusAdapter() {
-                    @Override
-                    public void focusLost(FocusEvent focusEvent) {
-                        controller.resize(field.getWidth(0), ((Number) height.getValue()).intValue());
-                    }
+                height.addPropertyChangeListener("value", evt -> {
+                    controller.resize(field.getWidth(0), ((Number) height.getValue()).intValue());
                 });
                 c.gridx = 1;
                 c.gridy = 1;
                 add(height, c);
             }
             {
-                ButtonGroup group = new ButtonGroup();
+                group = new ButtonGroup();
                 xorButton = new JRadioButton("xor");
-                xorButton.addActionListener(ae -> controller.toggleXORMode(true));
+                xorButton.addActionListener(ae -> {
+                    controller.toggleXORMode(true);
+                    if (!xorButton.isSelected()) {
+                        xorButton.setSelected(true);
+                    }
+                });
                 replaceButton = new JRadioButton("replace");
-                replaceButton.addActionListener(ae -> controller.toggleXORMode(false));
-
+                replaceButton.addActionListener(ae -> {
+                    controller.toggleXORMode(false);
+                    if (!replaceButton.isSelected()) {
+                        replaceButton.setSelected(true);
+                    }
+                });
+                c.gridx = 0;
+                c.gridy = 2;
+                add(xorButton, c);
+                c.gridx = 1;
+                c.gridy = 2;
+                add(replaceButton, c);
             }
         }
         controller.addDisplayModelObserver(this);
         controller.addFieldObserver(this);
+        controller.addEditModelObserver(this);
         pack();
     }
-
 
     @Override
     public void updateDisplay(DisplayModelObservable displayModel) {
@@ -116,9 +126,10 @@ public class OptionsFrame extends JFrame implements FieldObserver, EditModelObse
     @Override
     public void updateXOR(EditModelObservable editModel) {
         if (editModel.isXOR()) {
-            xorButton.setSelected(true);
+            group.setSelected(xorButton.getModel(), true);
         } else {
-            replaceButton.setSelected(true);
+            group.setSelected(replaceButton.getModel(), true);
+
         }
     }
 
