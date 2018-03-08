@@ -129,6 +129,8 @@ public class GUI extends JFrame implements DisplayModelObserver, FieldObserver, 
             fieldView.setHorizontalAlignment(SwingConstants.LEFT);
             fieldView.setVerticalAlignment(SwingConstants.TOP);
             JScrollPane scrollPane = new JScrollPane(fieldView, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+            scrollPane.getHorizontalScrollBar().setUnitIncrement(10);
+            scrollPane.getVerticalScrollBar().setUnitIncrement(10);
             add(scrollPane, BorderLayout.CENTER);
         }
         {

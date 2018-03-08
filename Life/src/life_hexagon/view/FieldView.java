@@ -24,9 +24,11 @@ public class FieldView extends JLabel implements FieldObserver, DisplayModelObse
         addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                Point p = fieldCell.calculatePositionOnField(e.getPoint());
-                if (p != null) {
-                    controller.touchCell(p.y, p.x, e.getButton() == MouseEvent.BUTTON1);
+                if (e.getButton() == MouseEvent.BUTTON1 || e.getButton() == MouseEvent.BUTTON3) {
+                    Point p = fieldCell.calculatePositionOnField(e.getPoint());
+                    if (p != null) {
+                        controller.touchCell(p.y, p.x, e.getButton() == MouseEvent.BUTTON1);
+                    }
                 }
             }
 
@@ -61,7 +63,7 @@ public class FieldView extends JLabel implements FieldObserver, DisplayModelObse
             }
         }
         icon.setImage(image);
-        setIcon(icon);
+        revalidate();
         repaint();
     }
 
