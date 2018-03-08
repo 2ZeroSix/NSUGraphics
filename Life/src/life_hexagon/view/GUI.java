@@ -23,6 +23,7 @@ public class GUI extends JFrame implements DisplayModelObserver, FieldObserver, 
     private NewDocumentFrame newDocumentFrame;
     private JLabel statuslabel;
 
+    private JButton stepButton;
     private JButton xorButton;
     private JToggleButton loopButton;
     public GUI() {
@@ -87,9 +88,9 @@ public class GUI extends JFrame implements DisplayModelObserver, FieldObserver, 
                 toolBar.setFloatable(false);
                 {
                     {
-                        JButton step = new JButton("step");
-                        step.addActionListener(ae -> controller.makeStep());
-                        toolBar.add(step);
+                        stepButton = new JButton("step");
+                        stepButton.addActionListener(ae -> controller.makeStep());
+                        toolBar.add(stepButton);
                     }
 
                     {
@@ -207,9 +208,13 @@ public class GUI extends JFrame implements DisplayModelObserver, FieldObserver, 
         if (editModel.isLoop()) {
             loopButton.setText("stop");
             loopButton.setSelected(true);
+            xorButton.setEnabled(false);
+            stepButton.setEnabled(false);
         } else {
             loopButton.setText("start");
             loopButton.setSelected(false);
+            xorButton.setEnabled(true);
+            stepButton.setEnabled(true);
         }
     }
 
