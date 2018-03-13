@@ -9,14 +9,14 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.text.DecimalFormat;
 
-public class NewDocumentFrame extends JFrame implements FieldObserver {
+public class NewDocumentFrame extends JDialog implements FieldObserver {
     private Controller controller;
     private JFormattedTextField width;
     private JFormattedTextField height;
-    public NewDocumentFrame(Controller controller) {
-        super("new document");
-        setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+    public NewDocumentFrame(JFrame parent, Controller controller) {
+        super(parent, "New Document", true);
         this.controller = controller;
+        setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
         setLayout(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
         DecimalFormat format = new DecimalFormat("0; ()");
@@ -59,31 +59,31 @@ public class NewDocumentFrame extends JFrame implements FieldObserver {
     }
 
     @Override
-    public void updateField(FieldObservable fieldObservable) {
-        updateImpact(fieldObservable);
-        updateSize(fieldObservable);
-        updateLifeBounds(fieldObservable);
+    public void updateField(FieldObservable field) {
+        updateImpact(field);
+        updateSize(field);
+        updateLifeBounds(field);
     }
 
     @Override
-    public void updateState(FieldObservable fieldObservable, int row, int column) {
+    public void updateState(FieldObservable field, int row, int column) {
     }
 
     @Override
-    public void updateImpact(FieldObservable fieldObservable, int row, int column) {
+    public void updateImpact(FieldObservable field, int row, int column) {
     }
 
     @Override
-    public void updateSize(FieldObservable fieldObservable) {
-        width.setValue(fieldObservable.getWidth(0));
-        height.setValue(fieldObservable.getHeight());
+    public void updateSize(FieldObservable field) {
+        width.setValue(field.getWidth(0));
+        height.setValue(field.getHeight());
     }
 
     @Override
-    public void updateLifeBounds(FieldObservable fieldObservable) {
+    public void updateLifeBounds(FieldObservable field) {
     }
 
     @Override
-    public void updateImpact(FieldObservable fieldObservable) {
+    public void updateImpact(FieldObservable field) {
     }
 }

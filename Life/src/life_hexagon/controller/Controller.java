@@ -27,7 +27,11 @@ public class Controller {
         this.display = modelFactory.createDisplayModel();
         this.field = modelFactory.createField();
         this.editModel = modelFactory.createEditModel();
-        this.editModel.setLoopTimer(new Timer(1000, e -> field.step()));
+        this.editModel.setLoopTimer(new Timer(1000, e -> {
+            synchronized (this) {
+                field.step();
+            }
+        }));
     }
 
     public synchronized void addFieldObserver(FieldObserver observer) {
@@ -61,18 +65,18 @@ public class Controller {
 
     public synchronized void newDocument(int width, int height) {
         reset();
-        for (int row = 0; row < field.getHeight(); ++row) {
-            for (int column = 0; column < field.getWidth(row); ++column) {
+        for (int row = 0; row < Integer.min(field.getHeight(), height); ++row) {
+            for (int column = 0; column < Integer.min(field.getWidth(row), width - row % 2); ++column) {
                 field.setState(row, column, false);
             }
         }
+        if (width != field.getWidth(0) || height != field.getHeight())
             field.setSize(height, width);
     }
 
-    public synchronized void openDocument(String fileName) throws LifeIO.LifeIOException {
+    public synchronized void openDocument(File file) throws LifeIO.LifeIOException {
         reset();
-        try (FileInputStream inputStream = new FileInputStream(fileName)) {
-            Scanner scanner = new Scanner(inputStream);
+        try (Scanner scanner = new Scanner(file)) {
             LifeIO lifeIO = new LifeIO();
             lifeIO.parse(scanner);
             lifeIO.setField(field);
@@ -82,16 +86,16 @@ public class Controller {
         } catch (java.io.IOException ex) {
             throw new LifeIO.LifeIOException("IO problem: " + ex.getLocalizedMessage(), ex);
         } catch (Exception ex) {
-            throw new LifeIO.LifeIOException("Unknown problem: " + ex.getLocalizedMessage(), ex);
+            throw new LifeIO.LifeIOException("Unknown problem: " + ex.getClass().toString() + ex.getLocalizedMessage(), ex);
         }
     }
 
-    public synchronized void saveDocument(String fileName) throws LifeIO.LifeIOException {
+    public synchronized void saveDocument(File file) throws LifeIO.LifeIOException {
         if (!editModel.isLoop()) {
-            try (PrintStream stream = new PrintStream(fileName)) {
+            try (PrintStream stream = new PrintStream(file)) {
                 LifeIO lifeIO = new LifeIO();
                 lifeIO.write(stream, display, field);
-            } catch (FileNotFoundException e) {
+            } catch (Exception e) {
                 throw new LifeIO.LifeIOException(e.getLocalizedMessage(), e);
             }
         }
@@ -99,16 +103,24 @@ public class Controller {
 
 
     public synchronized void clearTouch() {
-        lastTouch = null;
+        this.lastTouch = null;
+    }
+
+    public synchronized void clearTouch(boolean fill) {
+        this.lastTouch = null;
+        this.fill = !fill;
     }
 
     public synchronized void touchCell(int row, int column, boolean fill) {
-        if (!editModel.isLoop() && (lastTouch == null || !(row == lastTouch.y && column == lastTouch.x))
-                && row >= 0 && row < field.getHeight() && column >= 0 && column < field.getWidth(row)) {
-            boolean xorMode = editModel.isXOR();
-            field.setState(row, column, xorMode && !field.getState(row, column) || !xorMode && fill);
-            this.fill = fill;
-            lastTouch = new Point(column, row);
+        if (!editModel.isLoop() && (this.fill != fill || lastTouch == null || !(row == lastTouch.y && column == lastTouch.x))) {
+            if (row >= 0 && row < field.getHeight() && column >= 0 && column < field.getWidth(row)) {
+                boolean xorMode = editModel.isXOR();
+                field.setState(row, column, xorMode && !field.getState(row, column) || !xorMode && fill);
+                this.fill = fill;
+                lastTouch = new Point(column, row);
+            } else {
+                clearTouch(!fill);
+            }
         }
     }
 
@@ -134,7 +146,20 @@ public class Controller {
     }
 
     public synchronized void resize(int width, int height) {
-        if (!editModel.isLoop())
+        if (width != field.getWidth(0) || height != field.getHeight())
             field.setSize(height, width);
     }
+
+    public synchronized void setBorderWidth(int width) {
+        display.setBorderWidth(width);
+    }
+
+    public synchronized void setHexagonSize(int size) {
+        display.setHexagonSize(size);
+    }
+
+    public synchronized void toggleDisplayImpact() {
+        display.setDisplayImpact(!display.isDisplayImpact());
+    }
+
 }

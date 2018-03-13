@@ -10,11 +10,10 @@ import life_hexagon.view.observers.FieldObserver;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
 import java.text.DecimalFormat;
+import java.util.Objects;
 
-public class OptionsFrame extends JFrame implements FieldObserver, EditModelObserver, DisplayModelObserver {
+public class OptionsFrame extends JDialog implements FieldObserver, EditModelObserver, DisplayModelObserver {
     private FieldObservable field;
     private DisplayModelObservable display;
     private EditModelObservable edit;
@@ -26,10 +25,10 @@ public class OptionsFrame extends JFrame implements FieldObserver, EditModelObse
     private ButtonGroup group;
     private JRadioButton xorButton;
     private JRadioButton replaceButton;
-    public OptionsFrame(Controller controller) {
-        super("Options");
-        setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+    public OptionsFrame(JFrame parent, Controller controller) {
+        super(parent, "Options", true);
         this.controller = controller;
+        setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
         setLayout(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
         DecimalFormat format = new DecimalFormat("0; ()");
@@ -44,7 +43,8 @@ public class OptionsFrame extends JFrame implements FieldObserver, EditModelObse
                 width = new JFormattedTextField(format);
                 width.setColumns(5);
                 width.addPropertyChangeListener("value", evt -> {
-                    controller.resize(((Number) width.getValue()).intValue(), field.getHeight());
+                    if (!Objects.equals(evt.getOldValue(), evt.getNewValue()))
+                        controller.resize(((Number) width.getValue()).intValue(), field.getHeight());
                 });
                 c.gridx = 1;
                 c.gridy = 0;
@@ -60,7 +60,8 @@ public class OptionsFrame extends JFrame implements FieldObserver, EditModelObse
                 height = new JFormattedTextField(format);
                 height.setColumns(5);
                 height.addPropertyChangeListener("value", evt -> {
-                    controller.resize(field.getWidth(0), ((Number) height.getValue()).intValue());
+                    if (!Objects.equals(evt.getOldValue(), evt.getNewValue()))
+                        controller.resize(field.getWidth(0), ((Number) height.getValue()).intValue());
                 });
                 c.gridx = 1;
                 c.gridy = 1;
@@ -129,7 +130,6 @@ public class OptionsFrame extends JFrame implements FieldObserver, EditModelObse
             group.setSelected(xorButton.getModel(), true);
         } else {
             group.setSelected(replaceButton.getModel(), true);
-
         }
     }
 
@@ -139,32 +139,32 @@ public class OptionsFrame extends JFrame implements FieldObserver, EditModelObse
     }
 
     @Override
-    public void updateField(FieldObservable fieldObservable) {
-        this.field = fieldObservable;
-        updateImpact(fieldObservable);
-        updateLifeBounds(fieldObservable);
-        updateSize(fieldObservable);
+    public void updateField(FieldObservable field) {
+        this.field = field;
+        updateImpact(field);
+        updateLifeBounds(field);
+        updateSize(field);
     }
 
     @Override
-    public void updateState(FieldObservable fieldObservable, int row, int column) {}
+    public void updateState(FieldObservable field, int row, int column) {}
 
     @Override
-    public void updateImpact(FieldObservable fieldObservable, int row, int column) {}
+    public void updateImpact(FieldObservable field, int row, int column) {}
 
     @Override
-    public void updateSize(FieldObservable fieldObservable) {
-        width.setValue(fieldObservable.getWidth(0));
-        height.setValue(fieldObservable.getHeight());
+    public void updateSize(FieldObservable field) {
+        width.setValue(field.getWidth(0));
+        height.setValue(field.getHeight());
     }
 
     @Override
-    public void updateLifeBounds(FieldObservable fieldObservable) {
+    public void updateLifeBounds(FieldObservable field) {
 
     }
 
     @Override
-    public void updateImpact(FieldObservable fieldObservable) {
+    public void updateImpact(FieldObservable field) {
 
     }
 }

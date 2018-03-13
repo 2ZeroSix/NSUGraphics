@@ -31,7 +31,7 @@ public class LifeIO {
     private int height;
 
     public void parse(Scanner scanner) throws LifeIOException {
-        scanner.useDelimiter("([\\v\\h]+)|([\\v\\h]*(//)?.*[\\v]+)");
+        scanner.useDelimiter("(([\\v\\h])|([\\v\\h]*(//.*[\\v])[\\v\\h]*))+");
         try {
             if (!scanner.hasNextInt()) throw new LifeIOException("wrong format: max width expected");
             width = scanner.nextInt();
@@ -44,13 +44,13 @@ public class LifeIO {
             if (!scanner.hasNextInt()) throw new LifeIOException("wrong format: count of points expected");
             int all = scanner.nextInt();
             alive = new ArrayList<>(all);
-            for (int i = 0; i < all; ) {
-                if (!scanner.hasNextInt()) throw new LifeIOException("wrong format: not enough points");
+            for (int i = 0; i < all; ++i) {
+                if (!scanner.hasNextInt()) throw new LifeIOException("wrong format: not enough points, needed " + all + " got" + i);
                 int column = scanner.nextInt();
                 if (!scanner.hasNextInt())
                     throw new LifeIOException("wrong format: second coordinate of point expected");
                 int row = scanner.nextInt();
-                alive.set(i, new Point(column, row));
+                alive.add(new Point(column, row));
             }
         } catch (Exception ex) {
             alive = null;
@@ -64,13 +64,13 @@ public class LifeIO {
         stream.println(display.getHexagonSize());
         int count = 0;
         for (int row = 0; row < field.getHeight(); ++row) {
-            for (int column = 0; column < field.getHeight(); ++column) {
+            for (int column = 0; column < field.getWidth(row); ++column) {
                 if (field.getState(row, column)) ++count;
             }
         }
         stream.println(count);
         for (int row = 0; row < field.getHeight(); ++row) {
-            for (int column = 0; column < field.getHeight(); ++column) {
+            for (int column = 0; column < field.getWidth(row); ++column) {
                 if (field.getState(row, column))
                     stream.println(column + " " + row);
             }

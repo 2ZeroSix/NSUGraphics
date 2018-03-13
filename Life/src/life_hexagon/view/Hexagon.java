@@ -12,26 +12,22 @@ public class Hexagon {
     private int[][] dots = new int[2][6];
 
     void recalculateDots() {
-//        double angle = Math.PI / 2.;
-        double mult = Math.sqrt(3) / 2;
-//        for (int i = 0; i < 6; ++i) {
-//            angle += Math.PI / 3.;
-//            dots[0][i] = (int) (x + radius * Math.cos(angle));
-//            dots[1][i] = (int) (y + radius * Math.sin(angle));
-//        }
-        radius = this.radius + borderWidth / 2;
-        dots[0][0] = (int) (x);
-        dots[1][0] = (int) (y + radius);
-        dots[0][1] = (int) (x + radius * mult);
-        dots[1][1] = (int) (y + radius / 2);
-        dots[0][2] = (int) (x + radius * mult);
-        dots[1][2] = (int) (y - radius / 2);
-        dots[0][3] = (int) (x);
-        dots[1][3] = (int) (y - radius );
-        dots[0][4] = (int) (x - radius * mult);
-        dots[1][4] = (int) (y - radius / 2);
-        dots[0][5] = (int) (x - radius * mult);
-        dots[1][5] = (int) (y + radius / 2);
+        double multiplier = Math.sqrt(3) / 2;
+        double rd = (this.radius * multiplier) + (borderWidth + 1) / 2;
+        int R = (int) (rd / multiplier);
+        int r = (int)rd;
+        dots[0][0] = x;
+        dots[1][0] = y + R;
+        dots[0][1] = x + r;
+        dots[1][1] = y + R / 2;
+        dots[0][2] = x + r;
+        dots[1][2] = y - R / 2;
+        dots[0][3] = x;
+        dots[1][3] = y - R;
+        dots[0][4] = x - r;
+        dots[1][4] = y - R / 2;
+        dots[0][5] = x - r;
+        dots[1][5] = y + R / 2;
     }
 
     public Hexagon(int x, int y, int radius, int borderWidth) {
@@ -39,20 +35,27 @@ public class Hexagon {
         this.y = y;
         this.radius = radius;
         this.borderWidth = borderWidth;
-        recalculateDots();
     }
 
     public Hexagon() {
         this(0, 0, 0, 1);
     }
 
-    public void draw(MyImage image) {
+    public Hexagon draw(MyImage image) {
+        drawBorder(image);
+        drawInterior(image);
+        return this;
+    }
+
+    public Hexagon drawBorder(MyImage image) {
+        recalculateDots();
         image.getMyGraphics().drawPolygon(dots[0], dots[1], 6, borderColor, borderWidth);
-//        Graphics g = image.createGraphics();
-//        g.setColor(borderColor);
-//        g.drawPolygon(dots[0], dots[1], 6);
-//        g.dispose();
+        return this;
+    }
+
+    public Hexagon drawInterior(MyImage image) {
         image.getMyGraphics().spanFill(x, y, fillColor, borderColor);
+        return this;
     }
 
     public int getX() {
@@ -61,7 +64,6 @@ public class Hexagon {
 
     public Hexagon setX(int x) {
         this.x = x;
-        recalculateDots();
         return this;
     }
 
@@ -71,7 +73,6 @@ public class Hexagon {
 
     public Hexagon setY(int y) {
         this.y = y;
-        recalculateDots();
         return this;
     }
 
@@ -81,7 +82,6 @@ public class Hexagon {
 
     public Hexagon setRadius(int radius) {
         this.radius = radius;
-        recalculateDots();
         return this;
     }
 
@@ -113,34 +113,37 @@ public class Hexagon {
     }
 
     private Point getPoint(int i) {
-        double mult = Math.sqrt(3) / 2;
+        int R = this.radius;
+        int r = (int) (R * Math.sqrt(3) / 2);
         switch (i) {
             case 5:
-                return new Point((x),(y + radius));
+                return new Point((x),(y + R));
             case 4:
-                return new Point((int)(x + radius * mult),(y + radius / 2));
+                return new Point(x + r,(y + R / 2));
             case 3:
-                return new Point((int)(x + radius * mult),(y - radius / 2));
+                return new Point(x + r,(y - R / 2));
             case 2:
-                return new Point(x, y - radius);
+                return new Point(x, y - R);
             case 1:
-                return new Point((int)(x - radius * mult),(y - radius / 2));
+                return new Point(x - r,(y - R / 2));
             case 0:
-                return new Point((int)(x - radius * mult),(y + radius / 2));
+                return new Point(x - r,(y + R/ 2));
             default:
                 return null;
         }
     }
 
     protected int rotate(Point a, Point b, Point c) {
-        return (b.x - a.x) * (c.y - b.y) - (b.y - a.y) * (c.x - b.x);
+        return  (b.x - a.x) * (c.y - b.y) -
+                (b.y - a.y) * (c.x - b.x);
     }
 
     protected boolean intersect(Point a, Point b, Point c, Point d) {
-        return rotate(a, b, c) * rotate(a, b, d) < 0 && rotate (c, d, a)*rotate(c, d, b) < 0;
+        return  rotate(a, b, c) * rotate(a, b, d) <= 0 &&
+                rotate(c, d, a) * rotate(c, d, b) < 0;
     }
 
-    public boolean isInside(Point p) {
+    public boolean isContains(Point p) {
         int l = 1, r = 5;
         if (rotate(getPoint(0), getPoint(l), p) < 0 ||
                 rotate(getPoint(0), getPoint(r), p) > 0) {

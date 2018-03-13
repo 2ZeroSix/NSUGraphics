@@ -1,8 +1,6 @@
 package life_hexagon.view;
 
-import life_hexagon.model.observables.DisplayModelObservable;
 import life_hexagon.model.observables.FieldObservable;
-import life_hexagon.view.observers.DisplayModelObserver;
 
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
@@ -10,61 +8,92 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FieldCell extends Hexagon {
-    static Color textColor = new Color(0x010101);
-    static Color DEAD = (new Color(0xFFFFFF));
-    static Color DEAD_NEXT_ALIVE = (new Color(0xFF8C14));
-    static Color DEAD_NEARLY_ALIVE = (new Color(0xF3FF28));
-    static Color ALIVE_NEXT_DEAD = (new Color(0x75FF78));
-    static Color ALIVE_NEARLY_DEAD = (new Color(0x11FF27));
-    static Color ALIVE = (new Color(0x008000));
+    private static Color textColor = Color.BLACK;
+    private static Color DEAD = (new Color(0xFFFFFF));
+    private static Color DEAD_NEXT_ALIVE = (new Color(0xFF8C14));
+    private static Color DEAD_NEARLY_ALIVE = (new Color(0xF3FF28));
+    private static Color ALIVE_NEXT_DEAD = (new Color(0x75FF78));
+    private static Color ALIVE_NEARLY_DEAD = (new Color(0x11FF27));
+    private static Color ALIVE = (new Color(0x008000));
     private boolean printImpact = false;
+    private float impact = 0.f;
 
     public FieldCell() {
         super(0, 0, 0, 0);
     }
 
 
-    private Color calculateFillColor(FieldObservable fieldFieldObservable, int row, int column) {
-        boolean state = fieldFieldObservable.getState(row, column);
-        float impact = fieldFieldObservable.getImpact(row, column);
+    private Color calculateFillColor(FieldObservable field, int row, int column) {
+        boolean state = field.getState(row, column);
         if (state) {
-            return calculateFillColor(fieldFieldObservable, impact, ALIVE, ALIVE_NEARLY_DEAD, ALIVE_NEXT_DEAD);
+            return calculateFillColor(field, ALIVE, ALIVE_NEARLY_DEAD, ALIVE_NEXT_DEAD);
         } else {
-            return calculateFillColor(fieldFieldObservable, impact, DEAD_NEXT_ALIVE, DEAD_NEARLY_ALIVE, DEAD);
+            return calculateFillColor(field, DEAD_NEXT_ALIVE, DEAD_NEARLY_ALIVE, DEAD);
         }
     }
 
-    private Color calculateFillColor(FieldObservable fieldFieldObservable, float impact, Color next, Color nearly, Color normal) {
-        if (fieldFieldObservable.getBirthBegin() <= impact && impact <= fieldFieldObservable.getBirthEnd()) {
-            return next;
-        } else if (fieldFieldObservable.getLiveBegin() <= impact && impact <= fieldFieldObservable.getLiveEnd()) {
-            return nearly;
+    private Color calculateFillColor(FieldObservable field,
+                                     Color birthBounds, Color liveBounds, Color notBounds) {
+        if (field.getBirthBegin() <= impact && impact <= field.getBirthEnd()) {
+            return birthBounds;
+        } else if (field.getLiveBegin() <= impact && impact <= field.getLiveEnd()) {
+            return liveBounds;
         } else {
-            return normal;
+            return notBounds;
         }
     }
 
-
-    public void draw(MyImage image, FieldObservable field, int row, int column) {
+    public FieldCell updateParams(FieldObservable field, int row, int column) {
+        impact = field.getImpact(row, column);
         setFillColor(calculateFillColor(field, row, column));
         Point pos = calculatePositionOnScreen(row, column);
-        super.setX(pos.x).setY(pos.y).draw(image);
-        if (isPrintImpact()) {
-            drawImpact(image, field, row, column);
-        }
+        setX(pos.x).setY(pos.y);
+        return this;
     }
 
-    public void drawImpact(MyImage image, FieldObservable field, int row, int column) {
-        {
-            MyGraphics mg = image.getMyGraphics();
-            int R = getRadius();
-            int r = (int) (R * Math.sqrt(3) / 2);
-            mg.fillRectangle(new Rectangle(getX() - r, getY() - R / 2, r*2, R), getFillColor());
-        }
+    public FieldCell drawWithoutBorder(MyImage image) {
+        if (isPrintImpact())
+            cleanImpact(image);
+        drawInterior(image);
+        if (isPrintImpact())
+            drawImpact(image);
+        return this;
+    }
+
+    @Override
+    public FieldCell draw(MyImage image) {
+        drawBorder(image).drawWithoutBorder(image);
+        return this;
+    }
+
+    @Override
+    public FieldCell drawBorder(MyImage image) {
+        super.drawBorder(image);
+        return this;
+    }
+
+    @Override
+    public FieldCell drawInterior(MyImage image) {
+        super.drawInterior(image);
+        return this;
+    }
+
+    public FieldCell cleanImpact(MyImage image) {
+        int R = getRadius();
+        int r = (int) (R * Math.sqrt(3) / 2);
+        image
+                .getMyGraphics()
+                .fillRectangle(
+                        new Rectangle(getX() - r, getY() - R / 2, r * 2, R),
+                        new Color(0, true));
+        return this;
+    }
+
+    public FieldCell drawImpact(MyImage image) {
         if (isPrintImpact()) {
             Graphics2D g = image.createGraphics();
             g.setPaint(textColor);
-            float impactValue = field.getImpact(row, column);
+            float impactValue = impact;
             List<String> impactStrings = new ArrayList<>();
             if (impactValue != (long) impactValue) {
                 impactStrings.add(String.format("%.2f", impactValue));
@@ -87,6 +116,7 @@ public class FieldCell extends Hexagon {
             impactStrings.clear();
             g.dispose();
         }
+        return this;
     }
 
     public boolean isPrintImpact() {
@@ -106,65 +136,50 @@ public class FieldCell extends Hexagon {
     }
 
     private Point calculatePositionOnScreen(int row, int column) {
-        double r = (getRadius() * Math.sqrt(3) / 2);
-        int R = getRadius();
+//        int R = getRadius() + (getBorderWidth() + 1) / 2 ;
+        double multiplier = Math.sqrt(3) / 2;
+        double rd = (getRadius() * multiplier) + (getBorderWidth() + 1) / 2;
+        int R = (int) (rd / multiplier);
+        int r = (int) rd;
         // TODO add border to shift and step
-        int horizontalShift = (int) (r * ((row % 2) + 1) + getBorderWidth());
-        int horizontalStep = (int) (2 * r) + getBorderWidth();
-        int verticalShift = R + getBorderWidth() / 2;
-        int verticalStep = 3 * R / 2 + getBorderWidth() / 2;
+        int horizontalShift = ((r) * ((row % 2) + 1) + getBorderWidth() / 2);
+        int horizontalStep = (2 * r);
+        int verticalShift = R + (int) (getBorderWidth() / 2 / multiplier);
+        int verticalStep = 3 * R / 2;
         return new Point(
-                (int) (horizontalShift + horizontalStep * column),
-                (int) (verticalShift + verticalStep * row)
+                (horizontalShift + horizontalStep * column),
+                (verticalShift + verticalStep * row)
         );
     }
 
-    public Point calculatePositionOnField(Point point) {
+    public Point calculatePositionOnField(Point clickPoint) {
         Point result = null;
-        Hexagon hex = new Hexagon(0, 0, getRadius(), getBorderWidth());
-        if (point.x >= 0 && point.y >= 0) {
-            double r = (getRadius() * Math.sqrt(3) / 2);
-            int R = getRadius();
+        if (clickPoint.x >= 0 && clickPoint.y >= 0) {
             int borderWidth = getBorderWidth();
-            // TODO add border to shift and step properly
-            int horizontalShift = (int) (r) + getBorderWidth();
-            int horizontalStep = (int) (2 * r) + getBorderWidth();
-            int verticalShift = R + getBorderWidth() / 2;
-            int verticalStep = 3 * R / 2 + getBorderWidth() / 2;
-            int row = point.y / verticalStep;
-            int rowShift = point.y % verticalStep;
-
-            if (rowShift < R / 2) {
-
-                for (int i = -1; i <= 0; ++i) {
-                    if (row + i >= 0) {
-                        int nearestColumnOnScreen = point.x - horizontalShift * ((row + i) % 2);
-//                        if (nearestColumnOnScreen >= 0) {
-                            int column = (nearestColumnOnScreen) / horizontalStep;
-                            Point p = calculatePositionOnScreen(row + i, column);
-                            hex.setX(p.x).setY(p.y);
-                            if (hex.isInside(point)) {
-                                result = new Point(column, row + i);
-                                break;
-                            }
-//                        }
+            int radius = getRadius();
+            Hexagon hex = new Hexagon(0, 0, radius, borderWidth);
+            double multiplier = Math.sqrt(3) / 2;
+            double rd = (radius * multiplier) + (borderWidth + 1) / 2;
+            int R = (int) (rd / multiplier);
+            int r = (int) rd;
+            int horizontalStep = (2 * r);
+            int verticalShift = (int) (borderWidth / 2 / multiplier);
+            int verticalStep = 3 * R / 2;
+            int row = (clickPoint.y - verticalShift) / verticalStep;
+            for (int i = 0; i >= -1; --i) {
+                if (row + i >= 0) {
+                    int horizontalShift = (r) * (((row + i) % 2)) + borderWidth / 2;
+                    int column = (clickPoint.x - horizontalShift) / horizontalStep;
+                    Point p = calculatePositionOnScreen(row + i, column);
+                    hex.setX(p.x).setY(p.y);
+                    if (hex.isContains(clickPoint)) {
+                        p.setLocation(column, row + i);
+                        result = p;
+                        break;
                     }
                 }
-            } else {
-                int nearestColumnOnScreen = point.x - horizontalShift * ((row) % 2);
-                int column = (nearestColumnOnScreen) / horizontalStep;
-                Point p = calculatePositionOnScreen(row, column);
-                hex.setX(p.x).setY(p.y);
-                if (hex.isInside(point)) {
-                    result = new Point(column, row);
-                }
-//                if (nearestColumnOnScreen >= 0) {
-//                    int column = (nearestColumnOnScreen) / horizontalStep;
-//                    result = new Point(column, row);
-//                }
             }
         }
         return result;
     }
-
 }

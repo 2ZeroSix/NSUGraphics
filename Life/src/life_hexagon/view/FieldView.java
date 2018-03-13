@@ -28,13 +28,17 @@ public class FieldView extends JLabel implements FieldObserver, DisplayModelObse
                     Point p = fieldCell.calculatePositionOnField(e.getPoint());
                     if (p != null) {
                         controller.touchCell(p.y, p.x, e.getButton() == MouseEvent.BUTTON1);
+                    } else {
+                        controller.clearTouch(e.getButton() != MouseEvent.BUTTON1);
                     }
                 }
             }
 
             @Override
             public void mouseReleased(MouseEvent e) {
-                controller.clearTouch();
+                if (e.getButton() == MouseEvent.BUTTON1 || e.getButton() == MouseEvent.BUTTON3) {
+                    controller.clearTouch(e.getButton() == MouseEvent.BUTTON1);
+                }
             }
         });
         addMouseMotionListener(new MouseMotionAdapter() {
@@ -43,6 +47,8 @@ public class FieldView extends JLabel implements FieldObserver, DisplayModelObse
                 Point p = fieldCell.calculatePositionOnField(e.getPoint());
                 if (p != null) {
                     controller.touchCell(p.y, p.x);
+                } else {
+                    controller.clearTouch();
                 }
             }
         });
@@ -59,7 +65,7 @@ public class FieldView extends JLabel implements FieldObserver, DisplayModelObse
         image = new MyImage(size.x > 0 ? size.x : 1, size.y > 0 ? size.y: 1);
         for (int row = 0; row < field.getHeight(); ++row) {
             for (int column = 0; column < field.getWidth(row); ++column) {
-                fieldCell.draw(image, field, row, column);
+                fieldCell.updateParams(field, row, column).draw(image);
             }
         }
         icon.setImage(image);
@@ -69,14 +75,20 @@ public class FieldView extends JLabel implements FieldObserver, DisplayModelObse
 
     @Override
     public void updateState(FieldObservable field, int row, int column) {
-        fieldCell.draw(image, field, row, column);
-        repaint();
+        fieldCell.updateParams(field, row, column).drawWithoutBorder(image);
+        repaint(fieldCell.getX() - fieldCell.getRadius(),
+                fieldCell.getY() - fieldCell.getRadius(),
+                fieldCell.getRadius() * 2,
+                fieldCell.getRadius() * 2);
     }
 
     @Override
     public void updateImpact(FieldObservable field, int row, int column) {
-        fieldCell.draw(image, field, row, column);
-        repaint();
+        fieldCell.updateParams(field, row, column).drawWithoutBorder(image);
+        repaint(fieldCell.getX() - fieldCell.getRadius(),
+                fieldCell.getY() - fieldCell.getRadius(),
+                fieldCell.getRadius() * 2,
+                fieldCell.getRadius() * 2);
     }
 
     @Override
@@ -88,7 +100,7 @@ public class FieldView extends JLabel implements FieldObserver, DisplayModelObse
     public void updateImpact(FieldObservable field) {
         for (int row = 0; row < field.getHeight(); ++row) {
             for (int column = 0; column < field.getWidth(row); ++column) {
-                fieldCell.draw(image, field, row, column);
+                fieldCell.updateParams(field, row, column).drawWithoutBorder(image);
             }
         }
         repaint();
@@ -98,7 +110,7 @@ public class FieldView extends JLabel implements FieldObserver, DisplayModelObse
     public void updateLifeBounds(FieldObservable field) {
         for (int row = 0; row < field.getHeight(); ++row) {
             for (int column = 0; column < field.getWidth(row); ++column) {
-                fieldCell.draw(image, field, row, column);
+                fieldCell.updateParams(field, row, column).drawWithoutBorder(image);
             }
         }
         repaint();
@@ -128,12 +140,18 @@ public class FieldView extends JLabel implements FieldObserver, DisplayModelObse
     @Override
     public void updateDisplayImpact(DisplayModelObservable displayModel) {
         fieldCell.setPrintImpact(displayModel.isDisplayImpact());
-        if (field != null)
+        if (field != null) {
             for (int row = 0; row < field.getHeight(); ++row) {
-                for (int column = 0; column < field.getWidth(row); ++row) {
-                    fieldCell.drawImpact(image, field, row, column);
+                for (int column = 0; column < field.getWidth(row); ++column) {
+                    fieldCell.updateParams(field, row, column);
+                    if(!displayModel.isDisplayImpact()){
+                        fieldCell.cleanImpact(image);
+                    }
+                    fieldCell.drawWithoutBorder(image);
                 }
             }
+            repaint();
+        }
     }
 
 }

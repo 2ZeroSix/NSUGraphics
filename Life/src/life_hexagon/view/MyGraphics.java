@@ -51,47 +51,12 @@ public class MyGraphics {
     public void drawLine(int x0, int y0, int x1, int y1, Color color, int width) {
         if (width == 1) {
             drawLine(x0, y0, x1, y1, color);
-            return;
-        }
-        int dx = Math.abs(x1 - x0);
-        dx = dx == 0 ? 1 : dx;
-        int dy = Math.abs(y1 - y0);
-        int error = 0;
-        int dError = dy;
-        int y = y0;
-        int diry = Integer.signum(y1 - y0);
-        int dirx = x1 - x0 >= 0 ? 1 : -1;
-        for (int x = x0; x != x1 + dirx; x += dirx) {
-            drawPixel(x, y, color);
-            int currentWidth = 0;
-            if (dx >= dy) {
-                int ty = y;
-                while (++currentWidth < width) {
-                    ty += currentWidth;
-                    drawPixel(x, ty, color);
-                    if (++currentWidth > width) break;
-                    ty -= currentWidth;
-                    drawPixel(x, ty, color);
-                }
-            } else {
-                int tx = x;
-                while (++currentWidth < width) {
-                    tx += currentWidth;
-                    drawPixel(tx, y, color);
-                    if (++currentWidth > width) break;
-                    tx -= currentWidth;
-                    drawPixel(tx, y, color);
-                }
-            }
-            if (2 * error > dx) {
-                y += diry;
-                error -= dx;
-            } else {
-                error += dError;
-            }
-            if (2 * error > dx) {
-                x -= dirx;
-            }
+        } else {
+            Graphics2D g = image.createGraphics();
+            g.setColor(color);
+            g.setStroke(new BasicStroke(width, BasicStroke.CAP_ROUND, BasicStroke.JOIN_BEVEL));
+            g.drawLine(x0, y0, x1, y1);
+            g.dispose();
         }
     }
 
