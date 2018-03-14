@@ -162,4 +162,13 @@ public class Controller {
         display.setDisplayImpact(!display.isDisplayImpact());
     }
 
+    public synchronized void clear() {
+        for (int row = 0; row < field.getHeight(); ++row) {
+            for (int column = 0; column < field.getWidth(row); ++column) {
+                field.setState(row, column, false);
+            }
+        }
+
+    }
+
 }

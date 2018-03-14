@@ -51,11 +51,12 @@ public class NewDocumentFrame extends JDialog implements FieldObserver {
             });
             c.gridx = 0;
             c.gridy = 2;
-            c.fill = GridBagConstraints.HORIZONTAL;
+            c.gridwidth = 2;
             add(start, c);
         }
-        pack();
         controller.addFieldObserver(this);
+        pack();
+        setResizable(false);
     }
 
     @Override

@@ -20,11 +20,15 @@ public class OptionsFrame extends JDialog implements FieldObserver, EditModelObs
     private Controller controller;
     private JFormattedTextField width;
     private JFormattedTextField height;
-    private JFormattedTextField borderWidth;
-    private JFormattedTextField hexSize;
     private ButtonGroup group;
     private JRadioButton xorButton;
     private JRadioButton replaceButton;
+    private JSlider cellSizeSlider;
+    private JFormattedTextField cellSizeField;
+    private JSlider borderSizeSlider;
+    private JFormattedTextField borderSizeField;
+    private JToggleButton displayImpactButton;
+
     public OptionsFrame(JFrame parent, Controller controller) {
         super(parent, "Options", true);
         this.controller = controller;
@@ -34,9 +38,10 @@ public class OptionsFrame extends JDialog implements FieldObserver, EditModelObs
         DecimalFormat format = new DecimalFormat("0; ()");
         {
             {
-                JLabel wLabel = new JLabel("width");
+                JLabel wLabel = new JLabel("width ");
                 c.gridx = 0;
                 c.gridy = 0;
+                c.gridwidth = 1;
                 add(wLabel, c);
             }
             {
@@ -48,12 +53,14 @@ public class OptionsFrame extends JDialog implements FieldObserver, EditModelObs
                 });
                 c.gridx = 1;
                 c.gridy = 0;
+                c.gridwidth = 1;
                 add(width, c);
             }
             {
-                JLabel hLabel = new JLabel("height");
-                c.gridx = 0;
-                c.gridy = 1;
+                JLabel hLabel = new JLabel("height ");
+                c.gridx = 3;
+                c.gridy = 0;
+                c.gridwidth = 1;
                 add(hLabel, c);
             }
             {
@@ -61,11 +68,80 @@ public class OptionsFrame extends JDialog implements FieldObserver, EditModelObs
                 height.setColumns(5);
                 height.addPropertyChangeListener("value", evt -> {
                     if (!Objects.equals(evt.getOldValue(), evt.getNewValue()))
-                        controller.resize(field.getWidth(0), ((Number) height.getValue()).intValue());
+                        controller.resize(field.getWidth(0), ((Number) evt.getNewValue()).intValue());
+                });
+                c.gridx = 4;
+                c.gridy = 0;
+                c.gridwidth = 1;
+                add(height, c);
+            }
+            {
+                JLabel csLabel = new JLabel("cell size");
+                c.gridx = 0;
+                c.gridy = 1;
+                c.gridwidth = 2;
+                add(csLabel, c);
+            }
+            {
+                cellSizeSlider = new JSlider(JSlider.VERTICAL, 2, 100, 2);
+
+                cellSizeSlider.addChangeListener(l -> controller.setHexagonSize(cellSizeSlider.getValue()));
+                c.gridx = 0;
+                c.gridy = 2;
+                c.gridwidth = 1;
+                add(cellSizeSlider, c);
+            }
+            {
+                cellSizeField = new JFormattedTextField(format);
+                cellSizeField.setColumns(5);
+                cellSizeField.addPropertyChangeListener("value", evt -> {
+                    if (evt.getNewValue() != null) {
+                        int value = ((Number) evt.getNewValue()).intValue();
+                        if (2 <= value && value <= 100 &&
+                                !Objects.equals(evt.getOldValue(), evt.getNewValue())) {
+                            controller.setHexagonSize(value);
+                        } else {
+                            cellSizeField.setValue(evt.getOldValue());
+                        }
+                    }
                 });
                 c.gridx = 1;
+                c.gridy = 2;
+                c.gridwidth = 1;
+                add(cellSizeField, c);
+            }
+            {
+                JLabel bsLabel = new JLabel("border size");
+                c.gridx = 3;
                 c.gridy = 1;
-                add(height, c);
+                c.gridwidth = 2;
+                add(bsLabel, c);
+            }
+            {
+                borderSizeSlider = new JSlider(JSlider.VERTICAL,1, 100, 1);
+                borderSizeSlider.addChangeListener(l -> controller.setBorderWidth(borderSizeSlider.getValue()));
+                c.gridx = 3;
+                c.gridy = 2;
+                c.gridwidth = 1;
+                add(borderSizeSlider, c);
+
+                borderSizeField = new JFormattedTextField(format);
+                borderSizeField.setColumns(5);
+                borderSizeField.addPropertyChangeListener("value", evt -> {
+                    if (evt.getNewValue() != null) {
+                        int value = ((Number) evt.getNewValue()).intValue();
+                        if (1 <= value && value <= 100 &&
+                                !Objects.equals(evt.getOldValue(), evt.getNewValue())) {
+                            controller.setBorderWidth(((Number) evt.getNewValue()).intValue());
+                        } else {
+                            borderSizeField.setValue(evt.getOldValue());
+                        }
+                    }
+                });
+                c.gridx = 4;
+                c.gridy = 2;
+                c.gridwidth = 1;
+                add(borderSizeField, c);
             }
             {
                 group = new ButtonGroup();
@@ -84,37 +160,64 @@ public class OptionsFrame extends JDialog implements FieldObserver, EditModelObs
                     }
                 });
                 c.gridx = 0;
-                c.gridy = 2;
+                c.gridy = 3;
+                c.gridwidth = 2;
                 add(xorButton, c);
-                c.gridx = 1;
-                c.gridy = 2;
+                c.gridx = 3;
+                c.gridy = 3;
+                c.gridwidth = 2;
                 add(replaceButton, c);
+            }
+            {
+                displayImpactButton = new JToggleButton("impact");
+                displayImpactButton.addActionListener(ae -> {
+                    controller.toggleDisplayImpact();
+                });
+                c.gridx = 2;
+                c.gridy = 4;
+                c.gridwidth = 1;
+                c.fill = GridBagConstraints.BOTH;
+                add(displayImpactButton, c);
             }
         }
         controller.addDisplayModelObserver(this);
         controller.addFieldObserver(this);
         controller.addEditModelObserver(this);
         pack();
+        setResizable(false);
     }
 
     @Override
     public void updateDisplay(DisplayModelObservable displayModel) {
-
+        updateBorderWidth(displayModel);
+        updateDisplayImpact(displayModel);
+        updateHexagonSize(displayModel);
     }
 
     @Override
     public void updateBorderWidth(DisplayModelObservable displayModel) {
-
+        int border = displayModel.getBorderWidth();
+        if (borderSizeField.getValue() == null ||
+                border != ((Number)borderSizeField.getValue()).intValue())
+            borderSizeField.setValue(border);
+        if (border != borderSizeSlider.getValue())
+            borderSizeSlider.setValue(border);
     }
 
     @Override
     public void updateHexagonSize(DisplayModelObservable displayModel) {
+        int hexagon = displayModel.getHexagonSize();
+        if (cellSizeField.getValue() == null ||
+                hexagon != ((Number)cellSizeField.getValue()).intValue())
+            cellSizeField.setValue(hexagon);
+        if (hexagon != cellSizeSlider.getValue())
+            cellSizeSlider.setValue(hexagon);
 
     }
 
     @Override
     public void updateDisplayImpact(DisplayModelObservable displayModel) {
-
+        displayImpactButton.setSelected(displayModel.isDisplayImpact());
     }
 
     @Override
@@ -165,6 +268,5 @@ public class OptionsFrame extends JDialog implements FieldObserver, EditModelObs
 
     @Override
     public void updateImpact(FieldObservable field) {
-
     }
 }

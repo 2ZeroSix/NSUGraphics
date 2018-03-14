@@ -96,17 +96,18 @@ public class FieldCell extends Hexagon {
             float impactValue = impact;
             List<String> impactStrings = new ArrayList<>();
             if (impactValue != (long) impactValue) {
-                impactStrings.add(String.format("%.2f", impactValue));
+                if ((long)(impactValue * 10) * 10 != (long) (impactValue * 100))
+                    impactStrings.add(String.format("%.2f", impactValue));
                 impactStrings.add(String.format("%.1f", impactValue));
             }
             impactStrings.add(String.format("%d", (long) impactValue));
-            Font font = new Font("Serif", Font.PLAIN, 10);
+            Font font = new Font("Serif", Font.PLAIN, 2 * getRadius() / 3 < 8 ? 8 : 2 * getRadius() / 3);
             g.setFont(font);
             FontMetrics fm = g.getFontMetrics();
             for (String impact : impactStrings) {
                 Rectangle2D r = fm.getStringBounds(impact, g);
                 if (r.getWidth() <= getRadius() * Math.sqrt(3) &&
-                        r.getHeight() <= getRadius() * 2) {
+                        r.getHeight() <= getRadius()) {
                     int startX = getX() - (int) r.getWidth() / 2;
                     int startY = getY() - (int) r.getHeight() / 2 + fm.getAscent();
                     g.drawString(impact, startX, startY);
@@ -128,20 +129,17 @@ public class FieldCell extends Hexagon {
     }
 
     public Point calculateSize(int rows, int columns) {
-        // TODO fix size, current bigger than needed
         Point size = calculatePositionOnScreen(rows, columns);
         size.x -= (getRadius() * Math.sqrt(3) / 2) - 1;
-        size.y -= getRadius() / 2 - 1;
+        size.y -= getRadius() / 2 - (getBorderWidth() + 3) / 4;
         return size;
     }
 
     private Point calculatePositionOnScreen(int row, int column) {
-//        int R = getRadius() + (getBorderWidth() + 1) / 2 ;
         double multiplier = Math.sqrt(3) / 2;
         double rd = (getRadius() * multiplier) + (getBorderWidth() + 1) / 2;
         int R = (int) (rd / multiplier);
         int r = (int) rd;
-        // TODO add border to shift and step
         int horizontalShift = ((r) * ((row % 2) + 1) + getBorderWidth() / 2);
         int horizontalStep = (2 * r);
         int verticalShift = R + (int) (getBorderWidth() / 2 / multiplier);
