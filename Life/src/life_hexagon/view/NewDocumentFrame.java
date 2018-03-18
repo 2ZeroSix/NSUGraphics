@@ -47,6 +47,7 @@ public class NewDocumentFrame extends JDialog implements FieldObserver {
             start.addActionListener(ae -> {
                 controller.newDocument(((Number)width.getValue()).intValue(),
                         ((Number)height.getValue()).intValue());
+                ((GUI)getParent()).setChanged(false);
                 setVisible(false);
             });
             c.gridx = 0;

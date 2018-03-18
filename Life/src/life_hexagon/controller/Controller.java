@@ -22,6 +22,18 @@ public class Controller {
     private boolean fill = true;
     private Point lastTouch = null;
 
+    public void setLifeBounds(float liveBegin, float birthBegin, float birthEnd, float liveEnd) {
+        field.setLiveBounds(liveBegin, birthBegin, birthEnd, liveEnd);
+    }
+
+    public void setFirstImpact(float firstImpact) {
+        field.setFirstImpact(firstImpact);
+    }
+
+    public void setSecondImpact(float secondImpact) {
+        field.setSecondImpact(secondImpact);
+    }
+
     public Controller(ModelFactory modelFactory) {
         this.modelFactory = modelFactory;
         this.display = modelFactory.createDisplayModel();
@@ -162,13 +174,18 @@ public class Controller {
         display.setDisplayImpact(!display.isDisplayImpact());
     }
 
+    public synchronized void toggleFullColor() {
+        display.setFullColor(!display.isFullColor());
+    }
+
     public synchronized void clear() {
-        for (int row = 0; row < field.getHeight(); ++row) {
-            for (int column = 0; column < field.getWidth(row); ++column) {
-                field.setState(row, column, false);
+        if (!editModel.isLoop()) {
+            for (int row = 0; row < field.getHeight(); ++row) {
+                for (int column = 0; column < field.getWidth(row); ++column) {
+                    field.setState(row, column, false);
+                }
             }
         }
-
     }
 
 }

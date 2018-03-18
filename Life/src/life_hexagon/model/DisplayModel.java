@@ -10,12 +10,14 @@ public class DisplayModel implements MutableDisplayModelObservable{
     private int borderWidth;
     private int hexagonSize;
     private boolean displayImpact;
+    private boolean fullColor;
     private Set<DisplayModelObserver> observers = new HashSet<>();
 
-    public DisplayModel(int borderWidth, int hexagonSize, boolean displayImpact) {
+    public DisplayModel(int borderWidth, int hexagonSize, boolean displayImpact, boolean fullColor) {
         this.borderWidth = borderWidth;
         this.hexagonSize = hexagonSize;
         this.displayImpact = displayImpact;
+        this.fullColor = fullColor;
     }
 
     @Override
@@ -82,6 +84,13 @@ public class DisplayModel implements MutableDisplayModelObservable{
     }
 
     @Override
+    public void notifyFullColor() {
+        for (DisplayModelObserver observer : observers) {
+            observer.updateFullColor(this);
+        }
+    }
+
+    @Override
     public void notifyDisplay() {
         for (DisplayModelObserver observer : observers) {
             observer.updateDisplay(this);
@@ -97,5 +106,19 @@ public class DisplayModel implements MutableDisplayModelObservable{
     @Override
     public void removeObserver(DisplayModelObserver observer) {
         observers.remove(observer);
+    }
+
+    @Override
+    public boolean isFullColor() {
+        return fullColor;
+    }
+
+    @Override
+    public DisplayModel setFullColor(boolean fullColor) {
+        if (this.fullColor != fullColor) {
+            this.fullColor = fullColor;
+            notifyFullColor();
+        }
+        return this;
     }
 }

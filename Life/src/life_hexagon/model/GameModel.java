@@ -96,8 +96,11 @@ public class GameModel implements MutableFieldObservable {
     @Override
     public void setFirstImpact(float firstImpact) throws IllegalArgumentException {
         if (firstImpact < 0) throw new IllegalArgumentException("first impact must be >= 0");
-        this.firstImpact = firstImpact;
-        notifyImpact();
+        if (this.firstImpact != firstImpact) {
+            this.firstImpact = firstImpact;
+            recalculateImpact();
+            notifyImpact();
+        }
     }
 
     @Override
@@ -108,8 +111,11 @@ public class GameModel implements MutableFieldObservable {
     @Override
     public void setSecondImpact(float secondImpact) throws IllegalArgumentException {
         if (secondImpact < 0) throw new IllegalArgumentException("second impact must be >= 0");
-        this.secondImpact = secondImpact;
-        notifyImpact();
+        if (this.secondImpact != secondImpact) {
+            this.secondImpact = secondImpact;
+            recalculateImpact();
+            notifyImpact();
+        }
     }
 
     @Override
@@ -134,19 +140,24 @@ public class GameModel implements MutableFieldObservable {
     }
 
     @Override
-    public void setLifeBounds(float liveBegin, float birthBegin, float birthEnd, float liveEnd) throws IllegalArgumentException {
-        if (0 <= liveBegin &&
-                liveBegin <= birthBegin &&
-                birthBegin <= birthEnd &&
-                birthEnd <= liveEnd) {
-            this.liveBegin = liveBegin;
-            this.birthBegin = birthBegin;
-            this.birthEnd = birthEnd;
-            this.liveEnd = liveEnd;
-        } else {
-            throw new IllegalArgumentException("assert: (0 <= liveBegin <= birthBegin <= birthEnd <= liveEnd)");
+    public void setLiveBounds(float liveBegin, float birthBegin, float birthEnd, float liveEnd) throws IllegalArgumentException {
+        if ((   this.liveBegin != liveBegin ||
+                this.liveEnd != liveEnd ||
+                this.birthBegin != birthBegin ||
+                this.birthEnd != birthEnd)) {
+            if (0 <= liveBegin &&
+                    liveBegin <= birthBegin &&
+                    birthBegin <= birthEnd &&
+                    birthEnd <= liveEnd) {
+                this.liveBegin = liveBegin;
+                this.birthBegin = birthBegin;
+                this.birthEnd = birthEnd;
+                this.liveEnd = liveEnd;
+                notifyLifeBounds();
+            } else {
+                throw new IllegalArgumentException("assert: (0 <= liveBegin <= birthBegin <= birthEnd <= liveEnd)");
+            }
         }
-        notifyLifeBounds();
     }
 
     @Override

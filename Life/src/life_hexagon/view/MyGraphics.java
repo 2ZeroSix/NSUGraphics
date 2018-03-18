@@ -98,7 +98,6 @@ public class MyGraphics {
 
             spanLeft = false;
             spanRight = false;
-//            if (p.y >= 0)
             while (p.y < h && isOldColor.test(p)) {
                 drawPixelUnsafe(p.x, p.y, color);
 

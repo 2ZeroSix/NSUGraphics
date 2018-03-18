@@ -18,8 +18,6 @@ public class FieldView extends JLabel implements FieldObserver, DisplayModelObse
     private FieldObservable field;
     public FieldView(Controller controller) {
         this.controller = controller;
-        controller.addDisplayModelObserver(this);
-        controller.addFieldObserver(this);
         setIcon(icon);
         addMouseListener(new MouseAdapter() {
             @Override
@@ -52,6 +50,8 @@ public class FieldView extends JLabel implements FieldObserver, DisplayModelObse
                 }
             }
         });
+        controller.addFieldObserver(this);
+        controller.addDisplayModelObserver(this);
     }
 
     @Override
@@ -121,6 +121,7 @@ public class FieldView extends JLabel implements FieldObserver, DisplayModelObse
         updateBorderWidth(displayModel);
         updateDisplayImpact(displayModel);
         updateHexagonSize(displayModel);
+        updateFullColor(displayModel);
     }
 
     @Override
@@ -152,6 +153,17 @@ public class FieldView extends JLabel implements FieldObserver, DisplayModelObse
             }
             repaint();
         }
+    }
+
+    @Override
+    public void updateFullColor(DisplayModelObservable displayModel) {
+        fieldCell.setFullColor(displayModel.isFullColor());
+        for (int row = 0; row < field.getHeight(); ++row) {
+            for (int column = 0; column < field.getWidth(row); ++column) {
+                fieldCell.updateParams(field, row, column).drawWithoutBorder(image);
+            }
+        }
+        repaint();
     }
 
 }

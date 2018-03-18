@@ -23,7 +23,7 @@ public class ModelFactoryImpl implements ModelFactory {
 
     @Override
     public MutableDisplayModelObservable createDisplayModel() {
-        return new DisplayModel(1, 30, false);
+        return new DisplayModel(1, 30, false, true);
     }
 
     @Override

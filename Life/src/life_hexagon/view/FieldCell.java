@@ -16,6 +16,7 @@ public class FieldCell extends Hexagon {
     private static Color ALIVE_NEARLY_DEAD = (new Color(0x11FF27));
     private static Color ALIVE = (new Color(0x008000));
     private boolean printImpact = false;
+    private boolean fullColor = false;
     private float impact = 0.f;
 
     public FieldCell() {
@@ -26,9 +27,15 @@ public class FieldCell extends Hexagon {
     private Color calculateFillColor(FieldObservable field, int row, int column) {
         boolean state = field.getState(row, column);
         if (state) {
-            return calculateFillColor(field, ALIVE, ALIVE_NEARLY_DEAD, ALIVE_NEXT_DEAD);
+            if (fullColor)
+                return calculateFillColor(field, ALIVE, ALIVE_NEARLY_DEAD, ALIVE_NEXT_DEAD);
+            else
+                return calculateFillColor(field, ALIVE, ALIVE, ALIVE);
         } else {
-            return calculateFillColor(field, DEAD_NEXT_ALIVE, DEAD_NEARLY_ALIVE, DEAD);
+            if (fullColor)
+                return calculateFillColor(field, DEAD_NEXT_ALIVE, DEAD_NEARLY_ALIVE, DEAD);
+            else
+                return calculateFillColor(field, DEAD, DEAD, DEAD);
         }
     }
 
@@ -179,5 +186,14 @@ public class FieldCell extends Hexagon {
             }
         }
         return result;
+    }
+
+    public boolean isFullColor() {
+        return fullColor;
+    }
+
+    public FieldCell setFullColor(boolean fullColor) {
+        this.fullColor = fullColor;
+        return this;
     }
 }

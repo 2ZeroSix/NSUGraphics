@@ -7,4 +7,5 @@ public interface DisplayModelObserver {
     void updateBorderWidth(DisplayModelObservable displayModel);
     void updateHexagonSize(DisplayModelObservable displayModel);
     void updateDisplayImpact(DisplayModelObservable displayModel);
+    void updateFullColor(DisplayModelObservable displayModel);
 }

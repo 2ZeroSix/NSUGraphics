@@ -9,6 +9,8 @@ public interface DisplayModelObservable {
 
     boolean isDisplayImpact();
 
+    boolean isFullColor();
+
     void notifyDisplay();
 
     void notifyBorderWidth();
@@ -16,6 +18,8 @@ public interface DisplayModelObservable {
     void notifyHexagonSize();
 
     void notifyDisplayImpact();
+
+    void notifyFullColor();
 
     void addObserver(DisplayModelObserver observer);
 

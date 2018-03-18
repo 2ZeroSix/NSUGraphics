@@ -19,7 +19,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
 
-public class GUI extends JFrame implements DisplayModelObserver, FieldObserver, EditModelObserver, MouseListener {
+public class GUI extends StatusBarFrame implements DisplayModelObserver, FieldObserver, EditModelObserver {
     private Controller controller;
     private FieldObservable field;
     private DisplayModelObservable displayModel;
@@ -28,24 +28,29 @@ public class GUI extends JFrame implements DisplayModelObserver, FieldObserver, 
     private OptionsFrame optionsFrame;
     private NewDocumentFrame newDocumentFrame;
     private AboutFrame aboutFrame;
-    private JLabel statusLabel;
 
     private JButton stepButton;
     private JButton xorButton;
-    private JToggleButton loopButton;
-    private JToggleButton impactButton;
+    private JButton loopButton;
+    private JButton impactButton;
     private JButton clearButton;
     private JButton aboutButton;
+    private JButton fullColorButton;
+
 
     private boolean changed = false;
+    private JMenuItem stepItem;
+    private JMenuItem loopItem;
+    private JMenuItem clearItem;
+
     public GUI() {
+        super("LifeHexagon");
         init();
         postInit();
     }
 
     private void init() {
         initWindow();
-        initStatusBar();
         initMenuBar();
         initToolBar();
         initController();
@@ -54,16 +59,15 @@ public class GUI extends JFrame implements DisplayModelObserver, FieldObserver, 
     }
 
     private void initWindow() {
-        setTitle("LifeHexagon");
-        setLayout(new BorderLayout());
-        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        getWorkWindow().setLayout(new BorderLayout());
+        setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         setMinimumSize(new Dimension(800, 600));
         setLocationRelativeTo(null);
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent event) {
                 if (changed) {
-                    int answer = JOptionPane.showConfirmDialog(GUI.this, "Do you want to save model?", "Exit confirm", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                    int answer = JOptionPane.showConfirmDialog(GUI.this, "Do you want to save model?", "Exit confirm", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
                     if (answer == JOptionPane.YES_OPTION) {
                         JFileChooser fileChooser = new JFileChooser("Data");
                         int retVal = fileChooser.showSaveDialog(GUI.this);
@@ -73,11 +77,15 @@ public class GUI extends JFrame implements DisplayModelObserver, FieldObserver, 
                             } catch (LifeIO.LifeIOException e) {
                                 JOptionPane.showMessageDialog(GUI.this, e.getLocalizedMessage(), "Save error", JOptionPane.ERROR_MESSAGE);
                             }
+                            System.exit(0);
                         } else if (retVal == JFileChooser.ERROR_OPTION) {
                             System.err.println("error");
+                            System.exit(0);
                         } else {
                             windowClosing(event);
                         }
+                    } else if (answer == JOptionPane.NO_OPTION) {
+                        System.exit(0);
                     }
                 }
             }
@@ -85,17 +93,6 @@ public class GUI extends JFrame implements DisplayModelObserver, FieldObserver, 
     }
 
 
-    private void initStatusBar() {
-        JPanel statusBar = new JPanel();
-        statusBar.setBorder(new BevelBorder(BevelBorder.LOWERED));
-        add(statusBar, BorderLayout.PAGE_END);
-        statusBar.setPreferredSize(new Dimension(getWidth(), 16));
-        statusBar.setLayout(new BoxLayout(statusBar, BoxLayout.X_AXIS));
-        statusLabel = new JLabel("status");
-        statusLabel.setFont(Font.getFont("Serif"));
-        statusLabel.setHorizontalAlignment(SwingConstants.LEFT);
-        statusBar.add(statusLabel);
-    }
 
     private void initMenuBar() {
         JMenuBar menuBar = new JMenuBar();
@@ -143,6 +140,7 @@ public class GUI extends JFrame implements DisplayModelObserver, FieldObserver, 
                     if(retVal == JFileChooser.APPROVE_OPTION) {
                         try {
                             controller.openDocument(fileChooser.getSelectedFile());
+                            changed = false;
                         } catch (LifeIO.LifeIOException e) {
                             JOptionPane.showMessageDialog(this, e.getLocalizedMessage(), "Open error", JOptionPane.ERROR_MESSAGE);
                         }
@@ -162,6 +160,15 @@ public class GUI extends JFrame implements DisplayModelObserver, FieldObserver, 
 
             JMenu edit = new JMenu("Edit");
             {
+                loopItem = new JMenuItem();
+                loopItem.addActionListener(ae -> controller.toggleLoopMode());
+                edit.add(loopItem);
+                stepItem = new JMenuItem("Step");
+                stepItem.addActionListener(ae -> controller.makeStep());
+                edit.add(stepItem);
+                clearItem = new JMenuItem("clear");
+                clearItem.addActionListener(ae -> controller.clear());
+                edit.add(clearItem);
                 JMenuItem options = new JMenuItem("Options");
                 options.addActionListener(actionEvent -> {
                     optionsFrame.setLocationRelativeTo(this);
@@ -190,7 +197,7 @@ public class GUI extends JFrame implements DisplayModelObserver, FieldObserver, 
         toolBar.setFloatable(false);
         {
             {
-                loopButton = new JToggleButton();
+                loopButton = new JButton();
                 loopButton.addActionListener(ae -> controller.toggleLoopMode());
                 loopButton.addMouseListener(this);
                 try {
@@ -246,31 +253,46 @@ public class GUI extends JFrame implements DisplayModelObserver, FieldObserver, 
             }
 
             {
-                impactButton = new JToggleButton();
+                impactButton = new JButton();
                 impactButton.addActionListener(ae -> controller.toggleDisplayImpact());
                 impactButton.addMouseListener(this);
                 try {
                     impactButton.setIcon(new ImageIcon(ImageIO.read(getClass().getResource("/impact.png")).getScaledInstance(20, 20, Image.SCALE_SMOOTH)));
+                    impactButton.setSelectedIcon(new ImageIcon(ImageIO.read(getClass().getResource("/impact-selected.png")).getScaledInstance(20, 20, Image.SCALE_SMOOTH)));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
                 toolBar.add(impactButton);
             }
 
+            {
+                fullColorButton = new JButton();
+                fullColorButton.addActionListener(ae -> controller.toggleFullColor());
+                fullColorButton.addMouseListener(this);
+                try {
+                    fullColorButton.setIcon(new ImageIcon(ImageIO.read(getClass().getResource("/fullColor.png")).getScaledInstance(20, 20, Image.SCALE_SMOOTH)));
+                    fullColorButton.setSelectedIcon(new ImageIcon(ImageIO.read(getClass().getResource("/fullColor-selected.png")).getScaledInstance(20, 20, Image.SCALE_SMOOTH)));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                toolBar.add(fullColorButton);
+            }
+
             toolBar.addSeparator();
 
             {
                 aboutButton = new JButton();
+                aboutButton.addMouseListener(this);
                 aboutButton.addActionListener(ae -> {
                     aboutFrame.setLocationRelativeTo(null);
                     aboutFrame.setVisible(true);
                 });
-                aboutButton.addMouseListener(this);
                 try {
                     aboutButton.setIcon(new ImageIcon(ImageIO.read(getClass().getResource("/about.png")).getScaledInstance(20, 20, Image.SCALE_SMOOTH)));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+                aboutButton.setToolTipText("about");
                 toolBar.add(aboutButton);
             }
         }
@@ -311,6 +333,7 @@ public class GUI extends JFrame implements DisplayModelObserver, FieldObserver, 
         updateBorderWidth(displayModel);
         updateHexagonSize(displayModel);
         updateDisplayImpact(displayModel);
+        updateFullColor(displayModel);
     }
 
     @Override
@@ -331,6 +354,17 @@ public class GUI extends JFrame implements DisplayModelObserver, FieldObserver, 
         } else {
             impactButton.setSelected(false);
             impactButton.setToolTipText("show impact");
+        }
+    }
+
+    @Override
+    public void updateFullColor(DisplayModelObservable displayModel) {
+        if (displayModel.isFullColor()) {
+            fullColorButton.setSelected(true);
+            fullColorButton.setToolTipText("disable extended colors");
+        } else {
+            fullColorButton.setSelected(false);
+            fullColorButton.setToolTipText("enable extended colors");
         }
     }
 
@@ -377,7 +411,6 @@ public class GUI extends JFrame implements DisplayModelObserver, FieldObserver, 
             xorButton.setToolTipText("set edit mode to replace (current xor)");
         } else {
             xorButton.setSelected(true);
-
             xorButton.setToolTipText("set edit mode to xor (current replace)");
         }
     }
@@ -387,50 +420,28 @@ public class GUI extends JFrame implements DisplayModelObserver, FieldObserver, 
         if (editModel.isLoop()) {
             loopButton.setToolTipText("stop game");
             loopButton.setSelected(true);
+            loopItem.setText("stop");
             stepButton.setEnabled(false);
             clearButton.setEnabled(false);
+            stepItem.setEnabled(false);
+            clearItem.setEnabled(false);
         } else {
             loopButton.setToolTipText("start game (step per second)");
             loopButton.setSelected(false);
+            loopItem.setText("start");
             stepButton.setEnabled(true);
             clearButton.setEnabled(true);
+            stepItem.setEnabled(true);
+            clearItem.setEnabled(true);
         }
     }
 
-    private void setStatus(String status) {
-        if (!Objects.equals(status, statusLabel.getText())) {
-            this.statusLabel.setText(status);
-            this.statusLabel.repaint();
-        }
+    public boolean isChanged() {
+        return changed;
     }
 
-    private void setStatus(JComponent component) {
-        String tooltip = component.getToolTipText();
-        setStatus(tooltip);
-    }
-
-    @Override
-    public void mouseClicked(MouseEvent mouseEvent) {
-        setStatus((JComponent) mouseEvent.getComponent());
-    }
-
-    @Override
-    public void mousePressed(MouseEvent mouseEvent) {
-        setStatus((JComponent) mouseEvent.getComponent());
-    }
-
-    @Override
-    public void mouseReleased(MouseEvent mouseEvent) {
-        setStatus((JComponent) mouseEvent.getComponent());
-    }
-
-    @Override
-    public void mouseEntered(MouseEvent mouseEvent) {
-        setStatus((JComponent) mouseEvent.getComponent());
-    }
-
-    @Override
-    public void mouseExited(MouseEvent mouseEvent) {
-        setStatus("");
+    public GUI setChanged(boolean changed) {
+        this.changed = changed;
+        return this;
     }
 }
