@@ -58,6 +58,42 @@ public class GUI extends StatusBarFrame implements DisplayModelObserver, FieldOb
         initAdditionalFrames();
     }
 
+    private void exit() {
+        while (true) {
+            if (changed) {
+                int answer = JOptionPane.showConfirmDialog(GUI.this, "Do you want to save model?", "Exit confirm", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+                if (answer == JOptionPane.YES_OPTION) {
+                    JFileChooser fileChooser = new JFileChooser("Data");
+                    int retVal = fileChooser.showSaveDialog(GUI.this);
+                    if (retVal == JFileChooser.APPROVE_OPTION) {
+                        try {
+                            controller.saveDocument(fileChooser.getSelectedFile());
+                        } catch (LifeIO.LifeIOException e) {
+                            JOptionPane.showMessageDialog(GUI.this, e.getLocalizedMessage(), "Save error", JOptionPane.ERROR_MESSAGE);
+                            continue;
+                        }
+                        System.exit(0);
+                    } else if (retVal == JFileChooser.ERROR_OPTION) {
+                        System.err.println("error");
+                        System.exit(0);
+                    }
+                } else if (answer == JOptionPane.NO_OPTION) {
+                    System.exit(0);
+                } else if (answer == JOptionPane.CANCEL_OPTION) {
+                    return;
+                }
+            } else {
+                int answer = JOptionPane.showConfirmDialog(GUI.this, "Exit?", "Exit confirm", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                switch (answer) {
+                    case JOptionPane.YES_OPTION:
+                        System.exit(0);
+                    case JOptionPane.NO_OPTION:
+                        return;
+                }
+            }
+        }
+    }
+
     private void initWindow() {
         getWorkWindow().setLayout(new BorderLayout());
         setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
@@ -66,32 +102,10 @@ public class GUI extends StatusBarFrame implements DisplayModelObserver, FieldOb
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent event) {
-                if (changed) {
-                    int answer = JOptionPane.showConfirmDialog(GUI.this, "Do you want to save model?", "Exit confirm", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
-                    if (answer == JOptionPane.YES_OPTION) {
-                        JFileChooser fileChooser = new JFileChooser("Data");
-                        int retVal = fileChooser.showSaveDialog(GUI.this);
-                        if (retVal == JFileChooser.APPROVE_OPTION) {
-                            try {
-                                controller.saveDocument(fileChooser.getSelectedFile());
-                            } catch (LifeIO.LifeIOException e) {
-                                JOptionPane.showMessageDialog(GUI.this, e.getLocalizedMessage(), "Save error", JOptionPane.ERROR_MESSAGE);
-                            }
-                            System.exit(0);
-                        } else if (retVal == JFileChooser.ERROR_OPTION) {
-                            System.err.println("error");
-                            System.exit(0);
-                        } else {
-                            windowClosing(event);
-                        }
-                    } else if (answer == JOptionPane.NO_OPTION) {
-                        System.exit(0);
-                    }
-                }
+                exit();
             }
         });
     }
-
 
 
     private void initMenuBar() {
@@ -108,7 +122,7 @@ public class GUI extends StatusBarFrame implements DisplayModelObserver, FieldOb
 
 
                 File dir = new File("Data");
-                if(dir.isDirectory() ? !dir.canWrite() : !dir.mkdir()) {
+                if (dir.isDirectory() ? !dir.canWrite() : !dir.mkdir()) {
                     JOptionPane.showMessageDialog(this,
                             "can't open \"Data\" catalog with write rights, using default (" + new JFileChooser().getCurrentDirectory() + ")",
                             "Default save catalog",
@@ -119,7 +133,7 @@ public class GUI extends StatusBarFrame implements DisplayModelObserver, FieldOb
                 save.addActionListener(ae -> {
                     JFileChooser fileChooser = new JFileChooser("Data");
                     int retVal = fileChooser.showSaveDialog(this);
-                    if(retVal == JFileChooser.APPROVE_OPTION) {
+                    if (retVal == JFileChooser.APPROVE_OPTION) {
                         try {
                             controller.saveDocument(fileChooser.getSelectedFile());
                             changed = false;
@@ -137,7 +151,7 @@ public class GUI extends StatusBarFrame implements DisplayModelObserver, FieldOb
                 fileOpen.addActionListener(ae -> {
                     JFileChooser fileChooser = new JFileChooser("Data");
                     int retVal = fileChooser.showOpenDialog(this);
-                    if(retVal == JFileChooser.APPROVE_OPTION) {
+                    if (retVal == JFileChooser.APPROVE_OPTION) {
                         try {
                             controller.openDocument(fileChooser.getSelectedFile());
                             changed = false;
@@ -152,7 +166,7 @@ public class GUI extends StatusBarFrame implements DisplayModelObserver, FieldOb
 
 
                 JMenuItem exit = new JMenuItem("Exit");
-                exit.addActionListener(actionEvent -> System.exit(0));
+                exit.addActionListener(ae -> exit());
                 file.add(exit);
             }
             menuBar.add(file);
@@ -330,8 +344,6 @@ public class GUI extends StatusBarFrame implements DisplayModelObserver, FieldOb
     @Override
     public void updateDisplay(DisplayModelObservable displayModel) {
         this.displayModel = displayModel;
-        updateBorderWidth(displayModel);
-        updateHexagonSize(displayModel);
         updateDisplayImpact(displayModel);
         updateFullColor(displayModel);
     }

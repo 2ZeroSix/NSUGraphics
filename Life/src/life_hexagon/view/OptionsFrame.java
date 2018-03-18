@@ -224,11 +224,12 @@ public class OptionsFrame extends JDialog implements FieldObserver, EditModelObs
         add(displayPanel, borderSizeLabel,  2, 0, 1, 1);
         add(displayPanel, borderSizeField,  3, 0, 1, 1);
         add(displayPanel, borderSizeSlider, 2, 1, 2, 1);
+        add(displayPanel, displayImpactButton, 0, 2, 2, 1);
+        add(displayPanel, fullColorButton,     2, 2, 2, 1);
+
         add(this, editPanel, 1, 0, 1, 1);
         add(editPanel, xorButton,           0, 0, 1, 1);
         add(editPanel, replaceButton,       0, 1, 1, 1);
-        add(editPanel, displayImpactButton, 1, 0, 1, 1);
-        add(editPanel, fullColorButton,     1, 1, 1, 1);
 
         add(this, rulesPanel,       0, 2, 2, 1);
 
