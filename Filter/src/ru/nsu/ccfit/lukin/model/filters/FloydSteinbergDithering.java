@@ -1,16 +1,27 @@
 package ru.nsu.ccfit.lukin.model.filters;
 
+import ru.nsu.ccfit.lukin.model.filters.options.FilterOption;
+import ru.nsu.ccfit.lukin.model.filters.options.IntegerFilterOption;
+
 import java.awt.image.BufferedImage;
+import java.util.Map;
 
 public class FloydSteinbergDithering extends PixelFilter {
 
-    private final int countR;
-    private final int countG;
-    private final int countB;
+    private int countR;
+    private int countG;
+    private int countB;
     public FloydSteinbergDithering(int countR, int countG, int countB) {
-        this.countR = countR;
-        this.countG = countG;
-        this.countB = countB;
+        addOption("count red", new IntegerFilterOption(1, 255).setValue(countR));
+        addOption("count green", new IntegerFilterOption(1, 255).setValue(countG));
+        addOption("count blue", new IntegerFilterOption(1, 255).setValue(countB));
+    }
+
+    @Override
+    protected void assignOptions() {
+        this.countR = (Integer) getOption("count red").getValue();
+        this.countG = (Integer) getOption("count green").getValue();
+        this.countB = (Integer) getOption("count blue").getValue();
     }
 
     @Override

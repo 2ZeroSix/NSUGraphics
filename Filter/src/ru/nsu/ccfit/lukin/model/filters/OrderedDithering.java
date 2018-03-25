@@ -1,5 +1,7 @@
 package ru.nsu.ccfit.lukin.model.filters;
 
+import ru.nsu.ccfit.lukin.model.filters.options.IntegerFilterOption;
+
 import java.awt.image.BufferedImage;
 
 public class OrderedDithering extends PixelFilter {
@@ -13,26 +15,31 @@ public class OrderedDithering extends PixelFilter {
             {10, 58,  6, 54,  9, 57,  5, 53},
             {42, 26, 38, 22, 41, 25, 37, 21},
     };
-    private final int[][][] ditherMatrix;
+    private int[][][] ditherMatrix;
 
-    private final int countR;
-    private final int countG;
-    private final int countB;
+    private int countR;
+    private int countG;
+    private int countB;
     public OrderedDithering(int countR, int countG, int countB) {
-        this.countR = countR;
-        this.countG = countG;
-        this.countB = countB;
-        ditherMatrix = new int[3][8][8];
+        addOption("count red", new IntegerFilterOption(1, 255).setValue(countR));
+        addOption("count green", new IntegerFilterOption(1, 255).setValue(countG));
+        addOption("count blue", new IntegerFilterOption(1, 255).setValue(countB));
+    }
+
+    @Override
+    protected void assignOptions() {
+        this.countR = (Integer) getOption("count red").getValue();
+        this.countG = (Integer) getOption("count green").getValue();
+        this.countB = (Integer) getOption("count blue").getValue();
+        ditherMatrix = ditherMatrix == null ? new int[3][8][8] : ditherMatrix;
         for (int i = 0; i < matrix.length; ++i) {
             for (int j = 0; j < matrix[0].length; ++j) {
-                int dithR = ((256 * matrix[j][j]) - 256) / 64 / countR;
-                int dithG = ((256 * matrix[i][j]) - 256) / 64 / countG;
-                int dithB = ((256 * matrix[i][j]) - 256) / 64 / countB;
-                ditherMatrix[0][i][j] = dithR;
-                ditherMatrix[1][i][j] = dithG;
-                ditherMatrix[2][i][j] = dithB;
+                ditherMatrix[0][i][j] = ((256 * matrix[j][j]) - 256) / 64 / countR;
+                ditherMatrix[1][i][j] = ((256 * matrix[i][j]) - 256) / 64 / countG;
+                ditherMatrix[2][i][j] = ((256 * matrix[i][j]) - 256) / 64 / countB;
             }
         }
+
     }
 
     @Override

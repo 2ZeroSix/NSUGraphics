@@ -1,6 +1,7 @@
 package ru.nsu.ccfit.lukin.model.filters;
 
 import ru.nsu.ccfit.lukin.model.ImageUtils;
+import ru.nsu.ccfit.lukin.model.filters.options.IntegerFilterOption;
 
 import java.awt.image.BufferedImage;
 
@@ -11,14 +12,9 @@ public class SobelFilter extends AbstractFilter {
             {-1,  0,  1}
     };
     private int threshold;
-//    private final static int[][] GY = new int[][] {
-//            {-1, -2, -1},
-//            { 0,  0,  0},
-//            { 1,  2,  1}
-//    };
 
     public SobelFilter(int threshold) {
-        this.threshold = threshold;
+        addOption("threshold", new IntegerFilterOption(1, 255).setValue(threshold));
     }
 
     protected int filterPixel(BufferedImage image, int x, int y) {
@@ -42,6 +38,11 @@ public class SobelFilter extends AbstractFilter {
         x = x < 0 ? -x : (x >= image.getWidth()  ? 2 * image.getWidth() - 1 - x : x);
         y = y < 0 ? -y : (y >= image.getHeight() ? 2 * image.getHeight() - 1 - y: y);
         return (image.getRGB(x, y) >> (8 * offset)) & 0xFF;
+    }
+
+    @Override
+    protected void assignOptions() {
+        this.threshold = (Integer)getOption("threshold").getValue();
     }
 
     @Override
