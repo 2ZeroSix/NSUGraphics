@@ -27,7 +27,8 @@ public class SelectedImage extends ImagePanel implements FullImageObserver, Imag
         try {
             if (observable.getImage() != null) {
                 setImage(observable.getImage().getSubimage(selection.x, selection.y, selection.width, selection.height));
-                revalidate();
+//                revalidate();
+                notifyImage();
             }
         } catch (RasterFormatException ex) {
             ex.printStackTrace();

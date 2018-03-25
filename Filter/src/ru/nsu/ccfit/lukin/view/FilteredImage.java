@@ -11,15 +11,18 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 public class FilteredImage extends ImagePanel implements FilteredImageObservable, ImageObserver{
     private SelectedImage selectedImage;
     private Set<FilteredImageObserver>  filteredImageObservers  = new HashSet<>();
-    private Filter                      appliedFilter;
-//    private Thread updater;
-//    private boolean updated = false;
-//    private Object update = new Object();
+    private Filter filter;
+    private Thread updater;
+    private boolean updated = false;
+    private BufferedImage tmpImage = null;
+    private final Object update = new Object();
+    private final Object paint = new Object();
     public FilteredImage(SelectedImage selectedImage) {
         this.selectedImage = selectedImage;
         selectedImage.addImageObserver(this);
@@ -28,49 +31,69 @@ public class FilteredImage extends ImagePanel implements FilteredImageObservable
         setPreferredSize(selectedImage.getPreferredSize());
         setMinimumSize(selectedImage.getMinimumSize());
         setBorder(BorderFactory.createDashedBorder(Color.BLACK));
-        setAppliedFilter(new SobelFilter(30));
-//        updater = new Thread(() -> {
-//            try {
-//                while(true) {
-//                    synchronized (update) {
-//                        while (!updated) {
-//                            update.wait();
-//                        }
-//                        updated = false;
-//                    }
+        setFilter(new SobelFilter(30));
+        updater = new Thread(() -> {
+            try {
+                while(true) {
+                    BufferedImage image;
+//                    setIgnoreRepaint(true);
+                    synchronized (update) {
+                        while (!updated) {
+                            update.wait();
+                        }
+                        updated = false;
+
+                        image = selectedImage.getImage();
+                        if (image != null && filter != null) {
+                            if (tmpImage == null) tmpImage = ImageUtils.copy(image);
+                            else ImageUtils.copy(image, tmpImage);
+                        }
+                    }
+                    if (tmpImage != null && filter != null)
+                        filter.apply(tmpImage);
+                    swapImage();
+//                    setIgnoreRepaint(false);
 //                    applyFilter();
-//                    notifyAppliedFilter();
-//                }
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
-//        });
-//        updater.start();
+                    notifyAppliedFilter();
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
+        updater.start();
     }
 
-    private void applyFilter() {
-        BufferedImage image = selectedImage.getImage();
-        if (image != null && appliedFilter != null) {
-            if (getImage() == null) image = ImageUtils.copy(image);
-            else                    image = ImageUtils.copy(image, getImage());
-            appliedFilter.apply(image);
-        }
-        setImage(image);
+    private void swapImage() {
+        BufferedImage tmp = getImage();
+        setImage(tmpImage);
+        tmpImage = tmp;
     }
 
-    public FilteredImage setAppliedFilter(Filter appliedFilter) {
-        this.appliedFilter = appliedFilter;
-//        synchronized (update) {
-//            updated = true;
-//            update.notify();
+//    private void applyFilter() {
+//        BufferedImage image = selectedImage.getImage();
+//        if (image != null && filter != null) {
+//            if (getImage() == null) image = ImageUtils.copy(image);
+//            else                    image = ImageUtils.copy(image, getImage());
+//            filter.apply(image);
 //        }
-        applyFilter();
+//        setImage(image);
+//    }
+
+    public FilteredImage setFilter(Filter filter) {
+//        if (!Objects.equals(this.filter, filter)) {
+            this.filter = filter;
+            synchronized (update) {
+                updated = true;
+                update.notify();
+            }
+//            applyFilter();
+//        }
         return this;
     }
 
     @Override
-    public Filter getAppliedFilter() {
-        return appliedFilter;
+    public Filter getFilter() {
+        return filter;
     }
 
     @Override
@@ -96,6 +119,13 @@ public class FilteredImage extends ImagePanel implements FilteredImageObservable
 
     @Override
     public void updateImage(ImageObservable observable) {
-        setAppliedFilter(getAppliedFilter());
+        setFilter(getFilter());
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+//        synchronized (paint) {
+            super.paintComponent(g);
+//        }
     }
 }

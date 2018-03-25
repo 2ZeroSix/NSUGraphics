@@ -43,9 +43,9 @@ public class FloydSteinbergDithering extends PixelFilter {
     }
 
     private int getClosestPaletteColor(int rgb) {
-        int r = Math.round(((float)((rgb >> 16) & 0xFF)) * countR / 256) * 256 / countR;
-        int g = Math.round(((float)((rgb >> 8)  & 0xFF)) * countG / 256) * 256 / countG;
-        int b = Math.round(((float)((rgb)       & 0xFF)) * countB / 256) * 256 / countB;
+        int r = (Math.round(((float)((rgb >> 16) & 0xFF)) * countR / 256) * 256 / countR) & 0xFF;
+        int g = (Math.round(((float)((rgb >> 8)  & 0xFF)) * countG / 256) * 256 / countG) & 0xFF;
+        int b = (Math.round(((float)((rgb)       & 0xFF)) * countB / 256) * 256 / countB) & 0xFF;
         return 0xFF000000 | (r << 16) | (g << 8) | b;
     }
 }

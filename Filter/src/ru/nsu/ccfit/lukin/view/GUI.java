@@ -197,7 +197,7 @@ public class GUI extends ToolBarStatusBarFrame{
                 if (dialog == null) {
                     dialog = new JPanel();
 //                dialog.setResizable(false);
-                    dialog.setLayout(new GridLayout(3, 3, 5, 5));
+                    dialog.setLayout(new GridLayout());
                     Consumer<JFormattedTextField> changeListenerSetter = (field) -> {
                         field.addPropertyChangeListener("value", evt -> {
                             if (evt.getNewValue() != null) {

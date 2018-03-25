@@ -1,5 +1,6 @@
 package ru.nsu.ccfit.lukin.view;
 
+import ru.nsu.ccfit.lukin.model.ImageUtils;
 import ru.nsu.ccfit.lukin.model.observables.FilteredImageObservable;
 import ru.nsu.ccfit.lukin.model.observables.FullImageObservable;
 import ru.nsu.ccfit.lukin.model.observables.ImageObservable;
@@ -10,6 +11,7 @@ import ru.nsu.ccfit.lukin.view.observers.ImageObserver;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.function.Consumer;
 
 public class ImageObserverButton extends JButton implements FullImageObserver, FilteredImageObserver, ImageObserver {
