@@ -22,9 +22,9 @@ public class OrderedDithering extends PixelFilter {
     private int countB;
     public OrderedDithering(int countR, int countG, int countB) {
         super("Ordered Dithering filter");
-        addOption("count red", new IntegerFilterOption(1, 256).setValue(countR));
-        addOption("count green", new IntegerFilterOption(1, 256).setValue(countG));
-        addOption("count blue", new IntegerFilterOption(1, 256).setValue(countB));
+        addOption("count red", new IntegerFilterOption(2, 256).setValue(countR));
+        addOption("count green", new IntegerFilterOption(2, 256).setValue(countG));
+        addOption("count blue", new IntegerFilterOption(2, 256).setValue(countB));
     }
 
     @Override
@@ -35,9 +35,9 @@ public class OrderedDithering extends PixelFilter {
         ditherMatrix = ditherMatrix == null ? new int[3][8][8] : ditherMatrix;
         for (int i = 0; i < matrix.length; ++i) {
             for (int j = 0; j < matrix[0].length; ++j) {
-                ditherMatrix[0][i][j] = ((256 * matrix[j][j]) - 256) / 64 / countR;
-                ditherMatrix[1][i][j] = ((256 * matrix[i][j]) - 256) / 64 / countG;
-                ditherMatrix[2][i][j] = ((256 * matrix[i][j]) - 256) / 64 / countB;
+                ditherMatrix[0][i][j] = ((matrix[j][j]) - 32) * 256 / countR / 64;
+                ditherMatrix[1][i][j] = ((matrix[i][j]) - 32) * 256 / countG / 64;
+                ditherMatrix[2][i][j] = ((matrix[i][j]) - 32) * 256 / countB / 64;
             }
         }
 
@@ -46,9 +46,9 @@ public class OrderedDithering extends PixelFilter {
     @Override
     protected int filterPixel(BufferedImage image, int x, int y) {
         int rgb = image.getRGB(x, y);
-        int r = ((rgb >> 16) & 0xFF + ditherMatrix[0][x%8][y%8]) & 0xFF;
-        int g = ((rgb >> 8)  & 0xFF + ditherMatrix[1][x%8][y%8]) & 0xFF;
-        int b = ((rgb)       & 0xFF + ditherMatrix[2][x%8][y%8]) & 0xFF;
+        int r = clamp(((rgb >> 16) & 0xFF) + ditherMatrix[0][x%8][y%8]);
+        int g = clamp(((rgb >> 8)  & 0xFF) + ditherMatrix[1][x%8][y%8]);
+        int b = clamp(((rgb)       & 0xFF) + ditherMatrix[2][x%8][y%8]);
 //        int r = Integer.min(Integer.max((rgb >> 16) & 0xFF + ditherMatrix[0][x%8][y%8], 0), 0xFF);
 //        int g = Integer.min(Integer.max((rgb >> 8)  & 0xFF + ditherMatrix[1][x%8][y%8], 0), 0xFF);
 //        int b = Integer.min(Integer.max((rgb)       & 0xFF + ditherMatrix[2][x%8][y%8], 0), 0xFF);

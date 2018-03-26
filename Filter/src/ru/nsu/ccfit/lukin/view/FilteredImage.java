@@ -33,10 +33,10 @@ public class FilteredImage extends ImagePanel implements FilteredImageObservable
         setBorder(BorderFactory.createDashedBorder(Color.BLACK));
         updater = new Thread(() -> {
             try {
+                //noinspection InfiniteLoopStatement
                 while(true) {
                     try {
                         BufferedImage image;
-//                    setIgnoreRepaint(true);
                         synchronized (update) {
                             while (!updated) {
                                 update.wait();
@@ -55,12 +55,11 @@ public class FilteredImage extends ImagePanel implements FilteredImageObservable
                             filter.apply(tmpImage);
                         }
                         swapImage();
-//                    setIgnoreRepaint(false);
-//                    applyFilter();
                         notifyAppliedFilter();
                     } catch (InterruptedException e) {
                         throw e;
-                    } catch (Exception ignore) {
+                    } catch (Exception e) {
+                        e.getLocalizedMessage();
                     }
                 }
             } catch (InterruptedException e) {
@@ -76,25 +75,12 @@ public class FilteredImage extends ImagePanel implements FilteredImageObservable
         tmpImage = tmp;
     }
 
-//    private void applyFilter() {
-//        BufferedImage image = selectedImage.getImage();
-//        if (image != null && filter != null) {
-//            if (getImage() == null) image = ImageUtils.copy(image);
-//            else                    image = ImageUtils.copy(image, getImage());
-//            filter.apply(image);
-//        }
-//        setImage(image);
-//    }
-
     public FilteredImage setFilter(Filter filter) {
-//        if (!Objects.equals(this.filter, filter)) {
-            this.filter = filter;
-            synchronized (update) {
-                updated = true;
-                update.notify();
-            }
-//            applyFilter();
-//        }
+        this.filter = filter;
+        synchronized (update) {
+            updated = true;
+            update.notify();
+        }
         return this;
     }
 
@@ -120,7 +106,8 @@ public class FilteredImage extends ImagePanel implements FilteredImageObservable
 
     @Override
     public void removeImageObserver(ImageObserver imageObserver) {
-        filteredImageObservers.remove(imageObserver);
+        if (imageObserver instanceof FilteredImageObserver)
+            filteredImageObservers.remove(imageObserver);
         super.removeImageObserver(imageObserver);
     }
 

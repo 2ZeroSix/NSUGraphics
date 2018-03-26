@@ -59,6 +59,9 @@ public abstract class AbstractFilter implements Filter {
     }
 
     protected int getClosestPaletteColor(int rgb, int countR, int countG, int countB) {
+        --countR;
+        --countG;
+        --countB;
         int r = clamp(Math.round(((float)((rgb >> 16) & 0xFF)) * countR / 256) * 256 / countR);
         int g = clamp(Math.round(((float)((rgb >> 8)  & 0xFF)) * countG / 256) * 256 / countG);
         int b = clamp(Math.round(((float)((rgb)       & 0xFF)) * countB / 256) * 256 / countB);

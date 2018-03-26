@@ -13,9 +13,9 @@ public class FloydSteinbergDithering extends PixelFilter {
     private int countB;
     public FloydSteinbergDithering(int countR, int countG, int countB) {
         super("Floyd-Steinberg filter");
-        addOption("count red", new IntegerFilterOption(1, 256).setValue(countR));
-        addOption("count green", new IntegerFilterOption(1, 256).setValue(countG));
-        addOption("count blue", new IntegerFilterOption(1, 256).setValue(countB));
+        addOption("count red", new IntegerFilterOption(2, 256).setValue(countR));
+        addOption("count green", new IntegerFilterOption(2, 256).setValue(countG));
+        addOption("count blue", new IntegerFilterOption(2, 256).setValue(countB));
     }
 
     @Override
@@ -31,9 +31,9 @@ public class FloydSteinbergDithering extends PixelFilter {
         int w = image.getWidth();
         int oldP = image.getRGB(x, y);
         int newP = getClosestPaletteColor(oldP, countR, countG, countB);
-        int errorR = (((oldP >> 16) & 0xFF - (newP >> 16)   & 0xFF));
-        int errorG = (((oldP >> 8)  & 0xFF - (newP >> 8)    & 0xFF));
-        int errorB = (((oldP)       & 0xFF - (newP)         & 0xFF));
+        int errorR = ((((oldP >> 16) & 0xFF) - ((newP >> 16)   & 0xFF)));
+        int errorG = ((((oldP >> 8)  & 0xFF) - ((newP >> 8)    & 0xFF)));
+        int errorB = ((((oldP)       & 0xFF) - ((newP)         & 0xFF)));
 //        int error = ((errorR >= 0 ? errorR : 0xF00 - errorR) << 16) |
 //                ((errorG >= 0 ? errorG : 0xF00 - errorG) << 8) |
 //                ((errorB >= 0 ? errorB : 0xF00 - errorB));
@@ -49,9 +49,9 @@ public class FloydSteinbergDithering extends PixelFilter {
     }
 
     private int filterPixel(int rgb, int R, int G, int B, int multiplier) {
-        int r = clamp((rgb >> 16) & 0xFF + R * multiplier / 16);
-        int g = clamp((rgb >> 8)  & 0xFF + G * multiplier / 16);
-        int b = clamp((rgb)       & 0xFF + B * multiplier / 16);
+        int r = clamp(((rgb >> 16) & 0xFF) + R * multiplier / 16);
+        int g = clamp(((rgb >> 8)  & 0xFF) + G * multiplier / 16);
+        int b = clamp(((rgb)       & 0xFF) + B * multiplier / 16);
         return 0xFF000000 | (r << 16) | (g << 8) | b;
     }
 

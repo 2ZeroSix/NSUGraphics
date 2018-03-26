@@ -28,10 +28,14 @@ public class SobelFilter extends PixelFilter {
                 }
             }
         }
+        int max = 0;
         for (int k = 0; k <= 2; ++k) { // TODO узнать про порог
-            rgb[0][k] = Integer.max(Integer.min((int)Math.sqrt(rgb[0][k] * rgb[0][k] + rgb[1][k] + rgb[1][k]), 0xFF), 0);
-            rgb[0][k] = rgb[0][k] > threshold ? rgb[0][k] : 0;
-//            rgb[0][k] = Math.sqrt(rgb[0][k] * rgb[0][k] + rgb[1][k] + rgb[1][k]) > threshold ? 255 : 0;
+//            rgb[0][k] = clamp((int)Math.round(Math.sqrt(rgb[0][k] * rgb[0][k] + rgb[1][k] + rgb[1][k])));
+//            rgb[0][k] = rgb[0][k] > threshold ? rgb[0][k] : 0;
+            max = Math.sqrt(rgb[0][k] * rgb[0][k] + rgb[1][k] + rgb[1][k]) > threshold ? 255 : 0;
+        }
+        for (int k = 0; k <= 2; ++k) {
+            rgb[0][k] = max;
         }
         return 0xFF000000 | (rgb[0][0] << 16) | (rgb[0][1] << 8) | rgb[0][2];
     }
@@ -49,6 +53,7 @@ public class SobelFilter extends PixelFilter {
 
     @Override
     protected void realApply(BufferedImage image) {
+//        new BlackAndWhiteFilter().apply(image);
         BufferedImage tmpImage = ImageUtils.copy(image);
         for (int x = 0; x < image.getWidth(); ++x) {
             for (int y = 0; y < image.getHeight(); ++y) {
