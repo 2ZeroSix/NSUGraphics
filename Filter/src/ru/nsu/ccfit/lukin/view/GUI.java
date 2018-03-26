@@ -1,25 +1,29 @@
 package ru.nsu.ccfit.lukin.view;
 
 import jdk.nashorn.internal.scripts.JD;
-import ru.nsu.ccfit.lukin.model.filters.BlackAndWhiteFilter;
-import ru.nsu.ccfit.lukin.model.filters.FloydSteinbergDithering;
-import ru.nsu.ccfit.lukin.model.filters.NegativeFilter;
-import ru.nsu.ccfit.lukin.model.filters.OrderedDithering;
+import ru.nsu.ccfit.lukin.model.filters.*;
 import ru.nsu.ccfit.lukin.model.observables.FullImageObservable;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Consumer;
 
 public class GUI extends ToolBarStatusBarFrame{
     private FullImage fullImage;
     private SelectedImage selectedImage;
     private FilteredImage filteredImage;
+    private Map<String, Container> dialogs;
+    private Map<String, FilterOptionsDialog> filterOptionsDialogs;
+    private JFileChooser fileChooser = new JFileChooser();
 
     public GUI() {
         super("Filter");
@@ -51,58 +55,17 @@ public class GUI extends ToolBarStatusBarFrame{
         {
             JMenu file = new JMenu("File");
             {
-                JMenuItem newDocument = new JMenuItem("New Document");
-                newDocument.addActionListener(actionEvent -> {
-                    // TODO implement new document
-//                    newDocumentFrame.setLocationRelativeTo(this);
-//                    newDocumentFrame.setVisible(true);
-                });
+                JMenuItem newDocument = new JMenuItem("new document");
+                newDocument.addActionListener(actionEvent -> fullImage.setImage(null));
                 file.add(newDocument);
 
-
-//                File dir = new File("Data");
-//                if (dir.isDirectory() ? !dir.canWrite() : !dir.mkdir()) {
-//                    JOptionPane.showMessageDialog(this,
-//                            "can't open \"Data\" catalog with write rights, using default (" + new JFileChooser().getCurrentDirectory() + ")",
-//                            "Default save catalog",
-//                            JOptionPane.WARNING_MESSAGE);
-//                }
-
-                JMenuItem save = new JMenuItem("Save");
-                save.addActionListener(ae -> {
-                    // TODO implement saving
-//                    JFileChooser fileChooser = new JFileChooser("Data");
-//                    int retVal = fileChooser.showSaveDialog(this);
-//                    if (retVal == JFileChooser.APPROVE_OPTION) {
-//                        try {
-//                            controller.saveDocument(fileChooser.getSelectedFile());
-//                            changed = false;
-//                        } catch (LifeIO.LifeIOException e) {
-//                            JOptionPane.showMessageDialog(this, e.getLocalizedMessage(), "Save error", JOptionPane.ERROR_MESSAGE);
-//                        }
-//                    } else if (retVal == JFileChooser.ERROR_OPTION) {
-//                        System.err.println("error");
-//                    }
-                });
+                JMenuItem save = new JMenuItem("save file");
+                save.addActionListener(ae -> saveFile());
                 file.add(save);
 
 
-                JMenuItem fileOpen = new JMenuItem("File Open");
-                fileOpen.addActionListener(ae -> {
-                    // TODO implement opening
-//                    JFileChooser fileChooser = new JFileChooser("Data");
-//                    int retVal = fileChooser.showOpenDialog(this);
-//                    if (retVal == JFileChooser.APPROVE_OPTION) {
-//                        try {
-//                            controller.openDocument(fileChooser.getSelectedFile());
-//                            changed = false;
-//                        } catch (LifeIO.LifeIOException e) {
-//                            JOptionPane.showMessageDialog(this, e.getLocalizedMessage(), "Open error", JOptionPane.ERROR_MESSAGE);
-//                        }
-//                    } else if (retVal == JFileChooser.ERROR_OPTION) {
-//                        System.err.println("error");
-//                    }
-                });
+                JMenuItem fileOpen = new JMenuItem("open file");
+                fileOpen.addActionListener(ae -> openFile());
                 file.add(fileOpen);
 
 
@@ -119,11 +82,9 @@ public class GUI extends ToolBarStatusBarFrame{
 
             JMenu help = new JMenu("Help");
             {
-                JMenuItem about = new JMenuItem("About");
+                JMenuItem about = new JMenuItem("about");
                 about.addActionListener(ae -> {
-                    // TODO add about
-//                    aboutFrame.setLocationRelativeTo(null);
-//                    aboutFrame.setVisible(true);
+                    JOptionPane.showMessageDialog(this, dialogs.get(about.getText()), about.getText(), JOptionPane.PLAIN_MESSAGE);
                 });
                 help.add(about);
             }
@@ -140,15 +101,15 @@ public class GUI extends ToolBarStatusBarFrame{
         // TODO add toolbar buttons
 //        * new
         ButtonGroup group = new ButtonGroup();
-        ImageObserverButton newFileButton = new ImageObserverButton("new-file");
+        ImageObserverButton newFileButton = new ImageObserverButton("new file");
         newFileButton.addActionListener(ae -> fullImage.setImage(null));
         toolBar.add(newFileButton);
 //        * open
-        ImageObserverButton openFileButton = new ImageObserverButton("open-file");
+        ImageObserverButton openFileButton = new ImageObserverButton("open file");
         openFileButton.addActionListener(ae -> openFile());
         toolBar.add(openFileButton);
 //        * save
-        ImageObserverButton saveFileButton = new ImageObserverButton("save-file");
+        ImageObserverButton saveFileButton = new ImageObserverButton("save file");
         saveFileButton.addActionListener(ae -> saveFile());
         toolBar.add(saveFileButton);
 
@@ -166,142 +127,39 @@ public class GUI extends ToolBarStatusBarFrame{
 
         toolBar.addSeparator();
 //        * ч/б
-        FilterButton blackWhiteButton = new FilterButton("black-white", filteredImage) {
-            @Override
-            public boolean initFilter() {
-                setFilter(new BlackAndWhiteFilter());
-                setNeedToInitFilter(false);
-                return true;
-            }
-        };
+        FilterButton blackWhiteButton = new FilterButton(this,
+                new FilterOptionsDialog(new BlackAndWhiteFilter(), filteredImage, true));
         toolBar.add(blackWhiteButton);
 //        * Негатив
-        FilterButton negativeButton = new FilterButton("negative", filteredImage) {
-            @Override
-            public boolean initFilter() {
-                setFilter(new NegativeFilter());
-                setNeedToInitFilter(false);
-                return true;
-            }
-        };
+        FilterButton negativeButton = new FilterButton(this,
+                new FilterOptionsDialog(new NegativeFilter(), filteredImage, true));
         toolBar.add(negativeButton);
 //        * Дизеринг
 //        *   Флойда-Стейнберга - FloydSteinbergDithering
-        FilterButton floydSteinbergButton = new FilterButton("floyd-steinberg", filteredImage) {
-            public JFormattedTextField countBlueTextField;
-            public JFormattedTextField countGreenTextField;
-            public JFormattedTextField countRedTextField;
-            public JPanel dialog = null;
-            @Override
-            public boolean initFilter() {
-                if (dialog == null) {
-                    dialog = new JPanel();
-//                dialog.setResizable(false);
-                    dialog.setLayout(new GridLayout());
-                    Consumer<JFormattedTextField> changeListenerSetter = (field) -> {
-                        field.addPropertyChangeListener("value", evt -> {
-                            if (evt.getNewValue() != null) {
-                                int value = ((Number) evt.getNewValue()).intValue();
-                                if (value < 1 || value > 256) {
-                                    field.setValue(evt.getOldValue());
-                                }
-                            }
-                        });
-                    };
-                    JLabel countRedLabel = new JLabel("count of red colors");
-                    JLabel countGreenLabel = new JLabel("count of green colors");
-                    JLabel countBlueLabel = new JLabel("count of blue colors");
-                    countRedTextField = new JFormattedTextField(new DecimalFormat("0; ()"));
-                    countRedTextField.setValue(8);
-                    countGreenTextField = new JFormattedTextField(new DecimalFormat("0; ()"));
-                    countGreenTextField.setValue(8);
-                    countBlueTextField = new JFormattedTextField(new DecimalFormat("0; ()"));
-                    countBlueTextField.setValue(4);
-                    changeListenerSetter.accept(countRedTextField);
-                    changeListenerSetter.accept(countGreenTextField);
-                    changeListenerSetter.accept(countBlueTextField);
-                    dialog.add(countRedLabel);
-                    dialog.add(countRedTextField);
-                    dialog.add(countGreenLabel);
-                    dialog.add(countGreenTextField);
-                    dialog.add(countBlueLabel);
-                    dialog.add(countBlueTextField);
-//                add(dialog);
-                }
-                int retval = JOptionPane.showConfirmDialog(GUI.this, dialog,
-                        "Floyd-Steiberg options", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-
-                setNeedToInitFilter(true);
-                if (retval == JOptionPane.OK_OPTION) {
-                    setFilter(new FloydSteinbergDithering(((Number)countRedTextField.getValue()).intValue(),
-                            ((Number)countGreenTextField.getValue()).intValue(), ((Number)countBlueTextField.getValue()).intValue()));
-                    return true;
-                } else {
-                    return false;
-                }
-            }
-        };
+        FilterButton floydSteinbergButton = new FilterButton(this,
+                new FilterOptionsDialog(new FloydSteinbergDithering(8, 8, 4), filteredImage, true));
         toolBar.add(floydSteinbergButton);
 //        *   ordered dither - OrderedDithering
-        FilterButton orderedDitheringButton = new FilterButton("ordered dithering", filteredImage) {
-            public JFormattedTextField countBlueTextField;
-            public JFormattedTextField countGreenTextField;
-            public JFormattedTextField countRedTextField;
-            public JPanel dialog = null;
-            @Override
-            public boolean initFilter() {
-                if (dialog == null) {
-                    dialog = new JPanel();
-//                dialog.setResizable(false);
-                    dialog.setLayout(new GridLayout(3, 3, 5, 5));
-                    Consumer<JFormattedTextField> changeListenerSetter = (field) -> {
-                        field.addPropertyChangeListener("value", evt -> {
-                            if (evt.getNewValue() != null) {
-                                int value = ((Number) evt.getNewValue()).intValue();
-                                if (value < 1 || value > 256) {
-                                    field.setValue(evt.getOldValue());
-                                }
-                            }
-                        });
-                    };
-                    JLabel countRedLabel = new JLabel("count of red colors");
-                    JLabel countGreenLabel = new JLabel("count of green colors");
-                    JLabel countBlueLabel = new JLabel("count of blue colors");
-                    countRedTextField = new JFormattedTextField(new DecimalFormat("0; ()"));
-                    countRedTextField.setValue(8);
-                    countGreenTextField = new JFormattedTextField(new DecimalFormat("0; ()"));
-                    countGreenTextField.setValue(8);
-                    countBlueTextField = new JFormattedTextField(new DecimalFormat("0; ()"));
-                    countBlueTextField.setValue(4);
-                    changeListenerSetter.accept(countRedTextField);
-                    changeListenerSetter.accept(countGreenTextField);
-                    changeListenerSetter.accept(countBlueTextField);
-                    dialog.add(countRedLabel);
-                    dialog.add(countRedTextField);
-                    dialog.add(countGreenLabel);
-                    dialog.add(countGreenTextField);
-                    dialog.add(countBlueLabel);
-                    dialog.add(countBlueTextField);
-//                add(dialog);
-                }
-                int retval = JOptionPane.showConfirmDialog(GUI.this, dialog,
-                        "Ordered dithering options", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-                setNeedToInitFilter(true);
-                if (retval == JOptionPane.OK_OPTION) {
-                    setFilter(new OrderedDithering(((Number)countRedTextField.getValue()).intValue(),
-                            ((Number)countGreenTextField.getValue()).intValue(), ((Number)countBlueTextField.getValue()).intValue()));
-                    return true;
-                } else {
-                    return false;
-                }
-            }
-        };
+        FilterButton orderedDitheringButton = new FilterButton(this,
+                new FilterOptionsDialog(new OrderedDithering(8, 8, 4), filteredImage, true));
         toolBar.add(orderedDitheringButton);
 //        * Удвоение - NearestNeighborDoubleFilter
+        FilterButton doubleFilterButton = new FilterButton(this,
+                new FilterOptionsDialog(new NearestNeighborDoubleFilter(), filteredImage, true));
+        toolBar.add(doubleFilterButton);
 //        * Дифференцирующий фильтр
 //        * Собеля - SobelFilter
+        FilterButton sobelFilter = new FilterButton(this,
+                new FilterOptionsDialog(new SobelFilter(15), filteredImage, true));
+        toolBar.add(sobelFilter);
 //        * Робертса -
+        FilterButton robertsFilter = new FilterButton(this,
+                new FilterOptionsDialog(new RobertsFilter(), filteredImage, true));
+        toolBar.add(robertsFilter);
 //        * Сглаживающий фльтр -
+        FilterButton smoothFilterButton = new FilterButton(this,
+                new FilterOptionsDialog(new SmoothFilter(), filteredImage, true));
+        toolBar.add(smoothFilterButton);
 //        * Фильтр повышения резкости -
 //        * Тиснение -
 //        * Акварелизация -
@@ -327,6 +185,31 @@ public class GUI extends ToolBarStatusBarFrame{
     }
 
     private void initAdditionalFrames() {
+        dialogs = new HashMap<>();
+        {
+            Container about = new Box(BoxLayout.Y_AXIS);
+            try {
+                about.add(new JLabel(new ImageIcon(ImageIO.read(getClass().getResource("/me.png")))));
+            } catch (IOException e) {
+            }
+            about.add(new JLabel("Life ver. 1.0"));
+            about.add(new JLabel("Bogdan Lukin"));
+            about.add(new JLabel("FIT 15206"));
+            dialogs.put("about", about);
+        }
+        {
+            File dir = new File("Data");
+            if (dir.isDirectory() ? !dir.canWrite() : !dir.mkdir()) {
+                JOptionPane.showMessageDialog(this,
+                        "can't open \"Data\" catalog with write rights, using default (" + fileChooser.getCurrentDirectory() + ")",
+                        "Default save catalog",
+                        JOptionPane.WARNING_MESSAGE);
+            } else {
+                fileChooser.setCurrentDirectory(dir);
+            }
+            fileChooser.setFileFilter(new FileNameExtensionFilter("images",
+                    "jpg", "jpeg", "bmp", "png", "svg"));
+        }
         // TODO implement additional frames
 //        optionsFrame = new OptionsFrame(this, controller);
 //        newDocumentFrame = new NewDocumentFrame(this, controller);
@@ -346,14 +229,28 @@ public class GUI extends ToolBarStatusBarFrame{
 
 
     private void openFile() {
-        try {
-            fullImage.setImage(ImageIO.read(getClass().getResource("/Lena.bmp")));
-        } catch (IOException e) {
-            e.printStackTrace();
+        int retval = fileChooser.showOpenDialog(this);
+        if (retval == JFileChooser.APPROVE_OPTION) {
+            try {
+                fullImage.setImage(ImageIO.read(fileChooser.getSelectedFile()));
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(this, e.getLocalizedMessage(), "open file error", JOptionPane.ERROR_MESSAGE);
+            }
+        } else if (retval == JFileChooser.ERROR_OPTION) {
+            JOptionPane.showMessageDialog(this, "can't choose this file", "open file error", JOptionPane.ERROR_MESSAGE);
         }
-        // TODO implement opening
     }
     private void saveFile() {
-        // TODO implement opening
+        int retval = fileChooser.showSaveDialog(this);
+        if (retval == JFileChooser.APPROVE_OPTION) {
+            try {
+                String[] split = fileChooser.getSelectedFile().getName().split(".");
+                ImageIO.write(filteredImage.getImage(), split[split.length - 1], fileChooser.getSelectedFile());
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(this, e.getLocalizedMessage(), "save file error", JOptionPane.ERROR_MESSAGE);
+            }
+        } else if (retval == JFileChooser.ERROR_OPTION) {
+            JOptionPane.showMessageDialog(this, "can't choose this file", "save file error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 }

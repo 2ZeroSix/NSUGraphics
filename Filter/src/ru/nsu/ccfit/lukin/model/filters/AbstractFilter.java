@@ -8,6 +8,10 @@ import java.util.Map;
 
 public abstract class AbstractFilter implements Filter {
     private Map<String, FilterOption<?>> options = new HashMap<>();
+    private String name;
+    protected AbstractFilter(String name) {
+        this.name = name;
+    }
 
     @Override
     public void apply(BufferedImage image) {
@@ -40,8 +44,24 @@ public abstract class AbstractFilter implements Filter {
         }
     }
 
+    @Override
+    public String getName() {
+        return this.name;
+    }
+
     protected void assignOptions() {
         // default without options
     }
     protected abstract void realApply(BufferedImage image);
+
+    protected static int clamp(int comp) {
+        return Integer.min(Integer.max(comp, 0), 255);
+    }
+
+    protected int getClosestPaletteColor(int rgb, int countR, int countG, int countB) {
+        int r = clamp(Math.round(((float)((rgb >> 16) & 0xFF)) * countR / 256) * 256 / countR);
+        int g = clamp(Math.round(((float)((rgb >> 8)  & 0xFF)) * countG / 256) * 256 / countG);
+        int b = clamp(Math.round(((float)((rgb)       & 0xFF)) * countB / 256) * 256 / countB);
+        return 0xFF000000 | (r << 16) | (g << 8) | b;
+    }
 }

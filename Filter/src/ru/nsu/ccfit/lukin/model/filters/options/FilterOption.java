@@ -3,21 +3,25 @@ package ru.nsu.ccfit.lukin.model.filters.options;
 public abstract class FilterOption<T> {
     private T value;
 
+    public FilterOption(T value) {
+        this.value = value;
+    }
+
     public Class<?> getType() {
         return value.getClass();
     }
 
-    public FilterOption<T> setValue(Object value) {
+    public FilterOption<T> setValue(T value) {
         if (!isValid(value)) throw new IllegalArgumentException();
-        this.value = (T) value;
+        this.value = value;
         return this;
     }
     public T getValue() {
         return this.value;
     }
 
-    public boolean isValid(Object value) {
+    public boolean isValid(T value) {
         if (value == null) return false;
-        return getType().isAssignableFrom(value.getClass());
+        return true;
     }
 }

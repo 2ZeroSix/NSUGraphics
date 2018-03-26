@@ -21,9 +21,10 @@ public class OrderedDithering extends PixelFilter {
     private int countG;
     private int countB;
     public OrderedDithering(int countR, int countG, int countB) {
-        addOption("count red", new IntegerFilterOption(1, 255).setValue(countR));
-        addOption("count green", new IntegerFilterOption(1, 255).setValue(countG));
-        addOption("count blue", new IntegerFilterOption(1, 255).setValue(countB));
+        super("Ordered Dithering filter");
+        addOption("count red", new IntegerFilterOption(1, 256).setValue(countR));
+        addOption("count green", new IntegerFilterOption(1, 256).setValue(countG));
+        addOption("count blue", new IntegerFilterOption(1, 256).setValue(countB));
     }
 
     @Override
@@ -51,13 +52,6 @@ public class OrderedDithering extends PixelFilter {
 //        int r = Integer.min(Integer.max((rgb >> 16) & 0xFF + ditherMatrix[0][x%8][y%8], 0), 0xFF);
 //        int g = Integer.min(Integer.max((rgb >> 8)  & 0xFF + ditherMatrix[1][x%8][y%8], 0), 0xFF);
 //        int b = Integer.min(Integer.max((rgb)       & 0xFF + ditherMatrix[2][x%8][y%8], 0), 0xFF);
-        return getClosestPaletteColor((0xFF000000) | (r << 16) | (g << 8) | (b));
-    }
-
-    private int getClosestPaletteColor(int rgb) {
-        int r = Math.round(((float)((rgb >> 16) & 0xFF)) * countR / 256) * 256 / countR;
-        int g = Math.round(((float)((rgb >> 8)  & 0xFF)) * countG / 256) * 256 / countG;
-        int b = Math.round(((float)((rgb)       & 0xFF)) * countB / 256) * 256 / countB;
-        return 0xFF000000 | (r << 16) | (g << 8) | b;
+        return getClosestPaletteColor((0xFF000000) | (r << 16) | (g << 8) | (b), countR, countG, countB);
     }
 }

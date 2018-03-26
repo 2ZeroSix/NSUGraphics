@@ -62,6 +62,7 @@ public class ImagePanel extends JPanel implements ImageObservable{
 //        iconLabel.repaint();
         this.image = image;
         repaint();
+        notifyImage();
         return this;
     }
 

@@ -3,6 +3,10 @@ package ru.nsu.ccfit.lukin.model.filters;
 import java.awt.image.BufferedImage;
 
 public abstract class PixelFilter extends AbstractFilter {
+    protected PixelFilter(String name) {
+        super(name);
+    }
+
     @Override
     protected void realApply(BufferedImage image) {
         for (int y = 0; y < image.getHeight(); ++y) {

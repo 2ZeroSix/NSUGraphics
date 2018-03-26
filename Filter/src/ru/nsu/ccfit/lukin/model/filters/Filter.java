@@ -11,5 +11,6 @@ public interface Filter {
         return getOptions().get(name);
     }
     void setOption(String name, Object value);
+    String getName();
     void apply(BufferedImage image);
 }

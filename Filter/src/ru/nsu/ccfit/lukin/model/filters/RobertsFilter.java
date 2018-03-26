@@ -7,6 +7,11 @@ public class RobertsFilter extends PixelFilter {
             {1, 0},
             {0, -1}
     };
+
+    public RobertsFilter() {
+        super("roberts filter");
+    }
+
     @Override
     protected int filterPixel(BufferedImage image, int x, int y) {
         return 0;

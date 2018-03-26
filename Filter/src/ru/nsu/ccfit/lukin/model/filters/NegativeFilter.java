@@ -3,6 +3,10 @@ package ru.nsu.ccfit.lukin.model.filters;
 import java.awt.image.BufferedImage;
 
 public class NegativeFilter extends PixelFilter {
+    public NegativeFilter() {
+        super("Negative filter");
+    }
+
     @Override
     protected int filterPixel(BufferedImage image, int x, int y) {
         int p = image.getRGB(x, y);

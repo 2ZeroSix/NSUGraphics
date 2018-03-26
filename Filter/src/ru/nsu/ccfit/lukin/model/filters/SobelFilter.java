@@ -5,7 +5,7 @@ import ru.nsu.ccfit.lukin.model.filters.options.IntegerFilterOption;
 
 import java.awt.image.BufferedImage;
 
-public class SobelFilter extends AbstractFilter {
+public class SobelFilter extends PixelFilter {
     private final static int[][] GX = new int[][] {
             {-1,  0,  1},
             {-2,  0,  2},
@@ -14,6 +14,7 @@ public class SobelFilter extends AbstractFilter {
     private int threshold;
 
     public SobelFilter(int threshold) {
+        super("Sobel filter");
         addOption("threshold", new IntegerFilterOption(1, 255).setValue(threshold));
     }
 
@@ -28,8 +29,9 @@ public class SobelFilter extends AbstractFilter {
             }
         }
         for (int k = 0; k <= 2; ++k) { // TODO узнать про порог
-//            rgb[0][k] = (int)Math.sqrt(rgb[0][k] * rgb[0][k] + rgb[1][k] + rgb[1][k]) & 0xFF;
-            rgb[0][k] = Math.sqrt(rgb[0][k] * rgb[0][k] + rgb[1][k] + rgb[1][k]) > threshold ? 255 : 0;
+            rgb[0][k] = Integer.max(Integer.min((int)Math.sqrt(rgb[0][k] * rgb[0][k] + rgb[1][k] + rgb[1][k]), 0xFF), 0);
+            rgb[0][k] = rgb[0][k] > threshold ? rgb[0][k] : 0;
+//            rgb[0][k] = Math.sqrt(rgb[0][k] * rgb[0][k] + rgb[1][k] + rgb[1][k]) > threshold ? 255 : 0;
         }
         return 0xFF000000 | (rgb[0][0] << 16) | (rgb[0][1] << 8) | rgb[0][2];
     }
@@ -49,7 +51,7 @@ public class SobelFilter extends AbstractFilter {
     protected void realApply(BufferedImage image) {
         BufferedImage tmpImage = ImageUtils.copy(image);
         for (int x = 0; x < image.getWidth(); ++x) {
-            for (int y = 0; y < image.getWidth(); ++y) {
+            for (int y = 0; y < image.getHeight(); ++y) {
                 image.setRGB(x, y, filterPixel(tmpImage, x, y));
             }
         }

@@ -3,6 +3,10 @@ package ru.nsu.ccfit.lukin.model.filters;
 import java.awt.image.BufferedImage;
 
 public class NearestNeighborDoubleFilter extends AbstractFilter {
+    public NearestNeighborDoubleFilter() {
+        super("Double filter");
+    }
+
     @Override
     protected void realApply(BufferedImage image) {
         int w = image.getWidth();

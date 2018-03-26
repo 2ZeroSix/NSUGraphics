@@ -3,6 +3,10 @@ package ru.nsu.ccfit.lukin.model.filters;
 import java.awt.image.BufferedImage;
 
 public class BlackAndWhiteFilter extends PixelFilter {
+    public BlackAndWhiteFilter() {
+        super("Black and White filter");
+    }
+
     @Override
     protected int filterPixel(BufferedImage image, int x, int y) {
         int p = image.getRGB(x, y);

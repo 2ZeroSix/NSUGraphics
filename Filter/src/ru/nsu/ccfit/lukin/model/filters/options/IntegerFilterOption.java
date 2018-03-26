@@ -4,6 +4,7 @@ public class IntegerFilterOption extends FilterOption<Integer> {
     private int min;
     private int max;
     public IntegerFilterOption(int min, int max) {
+        super(min);
         this.min = min;
         this.max = max;
     }
@@ -17,10 +18,9 @@ public class IntegerFilterOption extends FilterOption<Integer> {
     }
 
     @Override
-    public boolean isValid(Object value) {
+    public boolean isValid(Integer value) {
         if (super.isValid(value)) {
-            int val = ((Integer)value);
-            return getMin() <= val && val <= getMax();
+            return getMin() <= value && value <= getMax();
         } else {
             return false;
         }

@@ -31,30 +31,37 @@ public class FilteredImage extends ImagePanel implements FilteredImageObservable
         setPreferredSize(selectedImage.getPreferredSize());
         setMinimumSize(selectedImage.getMinimumSize());
         setBorder(BorderFactory.createDashedBorder(Color.BLACK));
-        setFilter(new SobelFilter(30));
         updater = new Thread(() -> {
             try {
                 while(true) {
-                    BufferedImage image;
+                    try {
+                        BufferedImage image;
 //                    setIgnoreRepaint(true);
-                    synchronized (update) {
-                        while (!updated) {
-                            update.wait();
-                        }
-                        updated = false;
+                        synchronized (update) {
+                            while (!updated) {
+                                update.wait();
+                            }
+                            updated = false;
 
-                        image = selectedImage.getImage();
-                        if (image != null && filter != null) {
-                            if (tmpImage == null) tmpImage = ImageUtils.copy(image);
-                            else ImageUtils.copy(image, tmpImage);
+                            image = selectedImage.getImage();
+                            if (image != null && filter != null) {
+                                if (tmpImage == null) tmpImage = ImageUtils.copy(image);
+                                else tmpImage = ImageUtils.copy(image, tmpImage);
+                            } else {
+                                tmpImage = null;
+                            }
                         }
-                    }
-                    if (tmpImage != null && filter != null)
-                        filter.apply(tmpImage);
-                    swapImage();
+                        if (tmpImage != null && filter != null) {
+                            filter.apply(tmpImage);
+                        }
+                        swapImage();
 //                    setIgnoreRepaint(false);
 //                    applyFilter();
-                    notifyAppliedFilter();
+                        notifyAppliedFilter();
+                    } catch (InterruptedException e) {
+                        throw e;
+                    } catch (Exception ignore) {
+                    }
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -120,12 +127,5 @@ public class FilteredImage extends ImagePanel implements FilteredImageObservable
     @Override
     public void updateImage(ImageObservable observable) {
         setFilter(getFilter());
-    }
-
-    @Override
-    protected void paintComponent(Graphics g) {
-//        synchronized (paint) {
-            super.paintComponent(g);
-//        }
     }
 }

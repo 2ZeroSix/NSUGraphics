@@ -35,8 +35,8 @@ public class FullImage extends ImagePanel implements FullImageObservable, MouseL
 
 
     public FullImage setImage(BufferedImage image) {
+        this.fullSizeImage = image;
         if (image != null) {
-            this.fullSizeImage = image;
             int w = image.getWidth();
             int h = image.getHeight();
             super.setImage(ImageUtils.toBufferedImage(image.getScaledInstance(w > h ? (w > 350 ? 350 : -1) : -1, w > h ? -1 : (h > 350 ? 350 : -1), Image.SCALE_SMOOTH)));
@@ -116,15 +116,8 @@ public class FullImage extends ImagePanel implements FullImageObservable, MouseL
     @Override
     public void clean() {
         super.clean();
-        cleanSelection();
-    }
-
-    public void cleanSelection() {
-        selectable = false;
-        selection.height = 0;
-        selection.width = 0;
-        selection.x = 0;
-        selection.y = 0;
+        setImage(null);
+        setSelectable(false);
     }
 
     @Override
@@ -164,7 +157,7 @@ public class FullImage extends ImagePanel implements FullImageObservable, MouseL
     @Override
     public void paint(Graphics graphics) {
         super.paint(graphics);
-        if (fullSizeImage != null && selection.width != 0 && selection.height != 0) {
+        if (fullSizeImage != null && selectable) {
             int w = fullSizeImage.getWidth();
             int h = fullSizeImage.getHeight();
             double multiplier = 350. / (w > h ? w : h);
@@ -183,7 +176,11 @@ public class FullImage extends ImagePanel implements FullImageObservable, MouseL
 
 
     public FullImage setSelectable(boolean selectable) {
+//        if (!selectable) {
+//            setSelection(new Rectangle(0, 0, 0, 0));
+//        }
         this.selectable = selectable;
+        repaint();
         return this;
     }
 }

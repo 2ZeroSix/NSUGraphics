@@ -6,14 +6,23 @@ import java.awt.image.BufferedImage;
 public enum ImageUtils {;
 
     public static BufferedImage copy(Image source, BufferedImage destination) {
+        if (source.getHeight(null) != destination.getHeight() || source.getWidth(null) != destination.getWidth()) {
+            return copy(source);
+        }
         Graphics2D g = destination.createGraphics();
         g.drawImage(source, 0, 0, null);
         g.dispose();
         return destination;
     }
 
-    public static BufferedImage copy(BufferedImage source) {
-        BufferedImage b = new BufferedImage(source.getWidth(), source.getHeight(), source.getType());
+    public static BufferedImage copy(Image source) {
+        BufferedImage b;
+        if (source instanceof BufferedImage) {
+            BufferedImage src = (BufferedImage)source;
+            b = new BufferedImage(src.getWidth(), src.getHeight(), src.getType());
+        } else {
+            b = new BufferedImage(source.getWidth(null), source.getHeight(null), BufferedImage.TYPE_INT_ARGB);
+        }
         return copy(source, b);
     }
 
