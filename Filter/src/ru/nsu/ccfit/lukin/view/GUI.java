@@ -14,6 +14,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
@@ -104,7 +105,11 @@ public class GUI extends ToolBarStatusBarFrame{
 //        * new
         ButtonGroup group = new ButtonGroup();
         ImageObserverButton newFileButton = new ImageObserverButton("new file");
-        newFileButton.addActionListener(ae -> fullImage.setImage(null));
+        newFileButton.addActionListener(ae -> {
+            fullImage.clean();
+            selectedImage.setImage(null);
+            filteredImage.setImage(null);
+        });
         toolBar.add(newFileButton);
 //        * open
         ImageObserverButton openFileButton = new ImageObserverButton("open file");
@@ -152,19 +157,36 @@ public class GUI extends ToolBarStatusBarFrame{
 //        * Дифференцирующий фильтр
 //        * Собеля - SobelFilter
         FilterButton sobelFilter = new FilterButton(this,
-                new FilterOptionsDialog(new SobelFilter(15), filteredImage, true));
+                new FilterOptionsDialog(new SobelFilter(80), filteredImage, true));
         toolBar.add(sobelFilter);
 //        * Робертса -
         FilterButton robertsFilter = new FilterButton(this,
-                new FilterOptionsDialog(new RobertsFilter(), filteredImage, true));
+                new FilterOptionsDialog(new RobertsFilter(25), filteredImage, true));
         toolBar.add(robertsFilter);
 //        * Сглаживающий фльтр -
         FilterButton smoothFilterButton = new FilterButton(this,
                 new FilterOptionsDialog(new SmoothFilter(), filteredImage, true));
         toolBar.add(smoothFilterButton);
 //        * Фильтр повышения резкости -
+        FilterButton sharpFilterButton = new FilterButton(this,
+                new FilterOptionsDialog(new SharpFilter(), filteredImage, true));
+        toolBar.add(sharpFilterButton);
 //        * Тиснение -
+        FilterButton embossFilterButton = new FilterButton(this,
+                new FilterOptionsDialog(new EmbossFilter(), filteredImage, true));
+        toolBar.add(embossFilterButton);
 //        * Акварелизация -
+        FilterButton aquaFilterButton = new FilterButton(this,
+                new FilterOptionsDialog(new AquaFilter(), filteredImage, true));
+        toolBar.add(aquaFilterButton);
+//        * поворот
+        FilterButton rotateFilterButton = new FilterButton(this,
+                new FilterOptionsDialog(new RotateFilter(0.), filteredImage, true));
+        toolBar.add(rotateFilterButton);
+//        * гамма
+        FilterButton gammaFilterButton = new FilterButton(this,
+                new FilterOptionsDialog(new GammaFilter(1.), filteredImage, true));
+        toolBar.add(gammaFilterButton);
 //        * selected -> filtered
 //        * selected <- filtered
 
@@ -211,6 +233,7 @@ public class GUI extends ToolBarStatusBarFrame{
             }
             fileChooser.setFileFilter(new FileNameExtensionFilter("images",
                     "jpg", "jpeg", "bmp", "png", "svg"));
+            fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         }
         // TODO implement additional frames
 //        optionsFrame = new OptionsFrame(this, controller);
@@ -229,12 +252,19 @@ public class GUI extends ToolBarStatusBarFrame{
         System.exit(0);
     }
 
+    private void newFile() {
+        fullImage.clean();
+        selectedImage.clean();
+        filteredImage.clean();
+    }
 
     private void openFile() {
         int retval = fileChooser.showOpenDialog(this);
         if (retval == JFileChooser.APPROVE_OPTION) {
             try {
-                fullImage.setImage(ImageIO.read(fileChooser.getSelectedFile()));
+                BufferedImage image = ImageIO.read(fileChooser.getSelectedFile());
+                fullImage.clean();
+                fullImage.setImage(image);
             } catch (IOException e) {
                 JOptionPane.showMessageDialog(this, e.getLocalizedMessage(), "open file error", JOptionPane.ERROR_MESSAGE);
             }
@@ -243,16 +273,27 @@ public class GUI extends ToolBarStatusBarFrame{
         }
     }
     private void saveFile() {
-        int retval = fileChooser.showSaveDialog(this);
-        if (retval == JFileChooser.APPROVE_OPTION) {
-            try {
-                String[] split = fileChooser.getSelectedFile().getName().split(".");
-                ImageIO.write(filteredImage.getImage(), split[split.length - 1], fileChooser.getSelectedFile());
-            } catch (IOException e) {
-                JOptionPane.showMessageDialog(this, e.getLocalizedMessage(), "save file error", JOptionPane.ERROR_MESSAGE);
+        if (filteredImage.getImage() != null) {
+            int retval = fileChooser.showSaveDialog(this);
+            if (retval == JFileChooser.APPROVE_OPTION) {
+                try {
+                    File file = fileChooser.getSelectedFile();
+                    String[] split = file.getName().split("\\.");
+
+                    if (!ImageIO.write(filteredImage.getImage(), split[split.length - 1], fileChooser.getSelectedFile())) {
+                        JOptionPane.showMessageDialog(this, "wrong extension", "save file error", JOptionPane.ERROR_MESSAGE);
+                        saveFile();
+                    }
+                } catch (IOException e) {
+                    JOptionPane.showMessageDialog(this, e.getLocalizedMessage(), "save file error", JOptionPane.ERROR_MESSAGE);
+                    saveFile();
+                }
+            } else if (retval == JFileChooser.ERROR_OPTION) {
+                JOptionPane.showMessageDialog(this, "can't choose this file", "save file error", JOptionPane.ERROR_MESSAGE);
+                saveFile();
             }
-        } else if (retval == JFileChooser.ERROR_OPTION) {
-            JOptionPane.showMessageDialog(this, "can't choose this file", "save file error", JOptionPane.ERROR_MESSAGE);
+        } else {
+            JOptionPane.showMessageDialog(this, "nothing to save", "save file error", JOptionPane.ERROR_MESSAGE);
         }
     }
 }

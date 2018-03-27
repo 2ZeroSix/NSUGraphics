@@ -23,24 +23,24 @@ public class SelectedImage extends ImagePanel implements FullImageObserver, Imag
 
     @Override
     public void updateSelection(FullImageObservable observable) {
-        Rectangle selection = observable.getSelection();
-        try {
-            if (observable.getImage() != null) {
-                setImage(observable.getImage().getSubimage(selection.x, selection.y, selection.width, selection.height));
-//                revalidate();
-                notifyImage();
+        if (observable.isSelectable()) {
+            Rectangle selection = observable.getSelection();
+            try {
+                if (selection != null && observable.getImage() != null && selection.getWidth() > 0 && selection.getHeight() > 0) {
+                    setImage(observable.getImage().getSubimage(selection.x, selection.y, selection.width, selection.height));
+                    notifyImage();
+                }
+            } catch (RasterFormatException ex) {
             }
-        } catch (RasterFormatException ex) {
-            ex.printStackTrace();
         }
     }
 
     @Override
     public void updateSelectable(FullImageObservable observable) {
+        updateSelection(observable);
     }
 
     @Override
     public void updateImage(ImageObservable observable) {
-        setImage(null);
     }
 }

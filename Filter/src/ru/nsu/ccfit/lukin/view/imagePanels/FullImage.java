@@ -118,6 +118,7 @@ public class FullImage extends ImagePanel implements FullImageObservable, MouseL
         super.clean();
         setImage(null);
         setSelectable(false);
+        selection = new Rectangle(0, 0, 0, 0);
     }
 
     @Override
@@ -163,7 +164,7 @@ public class FullImage extends ImagePanel implements FullImageObservable, MouseL
             double multiplier = 350. / (w > h ? w : h);
             if (multiplier > 1.) multiplier = 1.;
             Graphics2D g2d = (Graphics2D) graphics;
-            Stroke dashed = new BasicStroke(3, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{9}, 0);
+            Stroke dashed = new BasicStroke(1, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{5, 3, 2, 3}, 0);
             g2d.setStroke(dashed);
             g2d.drawRect((int) (selection.x * multiplier), (int) (selection.y * multiplier), (int) (selection.width * multiplier), (int) (selection.height * multiplier));
         }
@@ -179,8 +180,11 @@ public class FullImage extends ImagePanel implements FullImageObservable, MouseL
 //        if (!selectable) {
 //            setSelection(new Rectangle(0, 0, 0, 0));
 //        }
-        this.selectable = selectable;
-        repaint();
+        if (this.selectable != selectable) {
+            this.selectable = selectable;
+            notifySelectable();
+            repaint();
+        }
         return this;
     }
 }

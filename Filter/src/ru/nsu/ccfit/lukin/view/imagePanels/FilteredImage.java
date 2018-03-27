@@ -21,7 +21,7 @@ public class FilteredImage extends ImagePanel implements FilteredImageObservable
     private boolean updated = false;
     private BufferedImage tmpImage = null;
     private final Object update = new Object();
-    private final Object paint = new Object();
+    private boolean autoUpdate = true;
     public FilteredImage(SelectedImage selectedImage) {
         this.selectedImage = selectedImage;
         selectedImage.addImageObserver(this);
@@ -58,7 +58,7 @@ public class FilteredImage extends ImagePanel implements FilteredImageObservable
                     } catch (InterruptedException e) {
                         throw e;
                     } catch (Exception e) {
-                        e.getLocalizedMessage();
+                        e.printStackTrace();
                     }
                 }
             } catch (InterruptedException e) {
@@ -112,6 +112,6 @@ public class FilteredImage extends ImagePanel implements FilteredImageObservable
 
     @Override
     public void updateImage(ImageObservable observable) {
-        setFilter(getFilter());
+        if (autoUpdate) setFilter(getFilter());
     }
 }

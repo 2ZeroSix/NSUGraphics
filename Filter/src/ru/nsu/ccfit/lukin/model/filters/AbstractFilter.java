@@ -9,6 +9,7 @@ import java.util.Map;
 public abstract class AbstractFilter implements Filter {
     private Map<String, FilterOption<?>> options = new HashMap<>();
     private String name;
+
     protected AbstractFilter(String name) {
         this.name = name;
     }
@@ -21,7 +22,7 @@ public abstract class AbstractFilter implements Filter {
     }
 
     protected boolean checkArgs(BufferedImage image) {
-        return  image != null;
+        return image != null;
     }
 
     protected AbstractFilter addOption(String name, FilterOption<?> option) {
@@ -52,6 +53,7 @@ public abstract class AbstractFilter implements Filter {
     protected void assignOptions() {
         // default without options
     }
+
     protected abstract void realApply(BufferedImage image);
 
     protected static int clamp(int comp) {
@@ -59,12 +61,20 @@ public abstract class AbstractFilter implements Filter {
     }
 
     protected int getClosestPaletteColor(int rgb, int countR, int countG, int countB) {
-        --countR;
-        --countG;
-        --countB;
-        int r = clamp(Math.round(((float)((rgb >> 16) & 0xFF)) * countR / 256) * 256 / countR);
-        int g = clamp(Math.round(((float)((rgb >> 8)  & 0xFF)) * countG / 256) * 256 / countG);
-        int b = clamp(Math.round(((float)((rgb)       & 0xFF)) * countB / 256) * 256 / countB);
+        int rd = 255 / (countR - 1);
+        int gd = 255 / (countG - 1);
+        int bd = 255 / (countB - 1);
+        int r = clamp(((((rgb >> 16) & 0xFF) + rd / 2) / rd) * rd);
+        int g = clamp(((((rgb >> 8) & 0xFF) + gd / 2) / gd) * gd);
+        int b = clamp(((((rgb) & 0xFF) + bd / 2) / bd) * bd);
         return 0xFF000000 | (r << 16) | (g << 8) | b;
     }
+
+    protected int component(BufferedImage image, int x, int y, int offset) {
+        x = x < 0 ? -x : (x >= image.getWidth() ? 2 * image.getWidth() - 1 - x : x);
+        y = y < 0 ? -y : (y >= image.getHeight() ? 2 * image.getHeight() - 1 - y : y);
+        if (offset == -1) return image.getRGB(x, y);
+        return (image.getRGB(x, y) >> (8 * offset)) & 0xFF;
+    }
+
 }

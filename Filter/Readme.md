@@ -1,5 +1,5 @@
 # Filters
-##### filters implementation:
+##### реалезации фильтров:
 * ru.nsu.ccfit.lukin.model.filters
     * ч/б - BlackAndWhiteFilter
     * Негатив - NegativeFilter
@@ -9,12 +9,14 @@
     * Удвоение - NearestNeighborDoubleFilter
     * Дифференцирующий фильтр
         * Собеля - SobelFilter
-        * Робертса - 
-    * Сглаживающий фильтр - 
-    * Фильтр повышения резкости - 
-    * Тиснение - 
-    * Акварелизация - 
-##### toolbar buttons:
+        * Робертса - RobertsFilter
+    * Сглаживающий фильтр - SmoothFilter
+    * Фильтр повышения резкости - SharpFilter
+    * Тиснение - EmbossFilter
+    * Акварелизация - AquaFilter
+    * поворот - RotateFilter
+    * гамма - GammaFilter
+##### кнопкм toolbar'а:
 * new
 * open
 * save
@@ -22,15 +24,17 @@
 * ч/б
 * Негатив
 * Дизеринг
-*   Флойда-Стейнберга - FloydSteinbergDithering
-*   ordered dither - OrderedDithering
-* Удвоение - NearestNeighborDoubleFilter
+*   Флойда-Стейнберга
+*   ordered dither
+* Удвоение
 * Дифференцирующий фильтр
-* Собеля - SobelFilter
-* Робертса - 
-* Сглаживающий фильтр - 
-* Фильтр повышения резкости - 
-* Тиснение - 
-* Акварелизация - 
+*   Собеля
+*   Робертса
+* Сглаживающий фильтр
+* Фильтр повышения резкости
+* Тиснение
+* Акварелизация
+* поворот
+* гамма
 * selected -> filtered
 * selected <- filtered

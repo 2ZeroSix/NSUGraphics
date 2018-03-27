@@ -55,7 +55,7 @@ public class ImagePanel extends JPanel implements ImageObservable{
         imageObservers.remove(imageObserver);
     }
 
-    protected ImagePanel setImage(BufferedImage image) {
+    public ImagePanel setImage(BufferedImage image) {
 //        if (getImage() != image) {
 //            iconLabel.setIcon(image != null ? new ImageIcon(image) : null);
 //        }

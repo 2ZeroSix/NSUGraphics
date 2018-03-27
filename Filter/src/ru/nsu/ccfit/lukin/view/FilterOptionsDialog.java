@@ -2,7 +2,7 @@ package ru.nsu.ccfit.lukin.view;
 
 import ru.nsu.ccfit.lukin.model.filters.Filter;
 import ru.nsu.ccfit.lukin.model.filters.options.FilterOption;
-import ru.nsu.ccfit.lukin.model.filters.options.IntegerFilterOption;
+import ru.nsu.ccfit.lukin.model.filters.options.NumberFilterOption;
 import ru.nsu.ccfit.lukin.view.imagePanels.FilteredImage;
 
 import javax.swing.*;
@@ -29,9 +29,9 @@ public class FilterOptionsDialog {
         if (!options.isEmpty()) {
             haveOptions = true;
             options.forEach((name, option) -> {
-                if (option instanceof IntegerFilterOption) {
-                    IntegerFilterOption intOpt = (IntegerFilterOption) option;
-                    addIntegerInput(name, intOpt.getMin(), intOpt.getMax(), intOpt.getValue(), (Integer val) -> {
+                if (option instanceof NumberFilterOption<?>) {
+                    NumberFilterOption<?> numOpt = (NumberFilterOption) option;
+                    addNumberInput(name, numOpt.getMin(), numOpt.getMax(), numOpt.getValue(), val -> {
                         filter.setOption(name, val);
                         if (instantFiltering) {
                             image.setFilter(filter);
@@ -47,8 +47,8 @@ public class FilterOptionsDialog {
     private void updateOptions() {
         final int[] i = {0};
         filter.getOptions().forEach((name, option) -> {
-            if (option instanceof IntegerFilterOption) {
-                IntegerFilterOption intOpt = (IntegerFilterOption) option;
+            if (option instanceof NumberFilterOption) {
+                NumberFilterOption intOpt = (NumberFilterOption) option;
                 componentMap.get(name).setValue(intOpt.getValue());
             }
         });
@@ -77,31 +77,58 @@ public class FilterOptionsDialog {
     }
 
     private int intOptionsCount = 0;
-    private void addIntegerInput(String name, int min, int max, int defaultValue, Consumer<Integer> onChange) {
+    private <T extends Number> void addNumberInput(String name, T min, T max, T defaultValue, Consumer<Number> onChange) {
         JLabel label = new JLabel(name);
-        JFormattedTextField field = new JFormattedTextField(new DecimalFormat("0; (0)"));
-        JSlider slider = new JSlider(JSlider.HORIZONTAL, min, max, defaultValue);
-        field.setColumns(Integer.max(Integer.toString(min).length(), Integer.toString(max).length()));
-        field.setValue(defaultValue);
-        field.addPropertyChangeListener("value", evt -> {
-            if (evt.getNewValue() != null) {
-                int value = ((Number) evt.getNewValue()).intValue();
-                if (!Objects.equals(evt.getOldValue(), evt.getNewValue())) {
-                    if (value < min || value > max) {
-                        field.setValue(evt.getOldValue());
-                    } else {
-                        onChange.accept(value);
-                        slider.setValue(value);
+        if (defaultValue instanceof Integer) {
+            JFormattedTextField field = new JFormattedTextField(new DecimalFormat("0"));
+            JSlider slider = new JSlider(JSlider.HORIZONTAL, min.intValue(), max.intValue(), defaultValue.intValue());
+            field.setColumns(Integer.max(min.toString().length(), max.toString().length()));
+            field.setValue(defaultValue);
+            field.addPropertyChangeListener("value", evt -> {
+                if (evt.getNewValue() != null) {
+                    int value = ((Number) evt.getNewValue()).intValue();
+                    if (!Objects.equals(evt.getOldValue(), evt.getNewValue())) {
+                        if (value < min.intValue() || value > max.intValue()) {
+                            field.setValue(evt.getOldValue());
+                        } else {
+                            onChange.accept(value);
+                            slider.setValue(value);
+                        }
                     }
                 }
-            }
-        });
-        slider.addChangeListener((ce) -> field.setValue(slider.getValue()));
-        ContainerUtils.add(panel, label, 0, intOptionsCount, 1, 1);
-        ContainerUtils.add(panel, field, 1, intOptionsCount, 1, 1);
-        ContainerUtils.add(panel, slider, 2, intOptionsCount, 1, 1);
-        ++intOptionsCount;
-        componentMap.put(name, field);
+            });
+            slider.addChangeListener((ce) -> field.setValue(slider.getValue()));
+            ContainerUtils.add(panel, label, 0, intOptionsCount, 1, 1);
+            ContainerUtils.add(panel, field, 1, intOptionsCount, 1, 1);
+            ContainerUtils.add(panel, slider, 2, intOptionsCount, 1, 1);
+            ++intOptionsCount;
+            componentMap.put(name, field);
+        } else if (defaultValue instanceof Double) {
+            JFormattedTextField field = new JFormattedTextField(new DecimalFormat("0.00"));
+            JSlider slider = new JSlider(JSlider.HORIZONTAL, (int)(min.doubleValue() * 100), (int)(max.doubleValue() * 100), (int)(defaultValue.doubleValue() * 100));
+            field.setColumns(Integer.max(min.toString().length(), max.toString().length()));
+            field.setValue(defaultValue);
+            field.addPropertyChangeListener("value", evt -> {
+                if (evt.getNewValue() != null) {
+                    double value = ((Number) evt.getNewValue()).doubleValue();
+                    if (!Objects.equals(evt.getOldValue(), evt.getNewValue())) {
+                        if (value < min.doubleValue() || value > max.doubleValue()) {
+                            field.setValue(evt.getOldValue());
+                        } else {
+                            onChange.accept(value);
+                            slider.setValue((int)(value * 100));
+                        }
+                    }
+                }
+            });
+            slider.addChangeListener((ce) -> field.setValue(slider.getValue() / 100.));
+            ContainerUtils.add(panel, label, 0, intOptionsCount, 1, 1);
+            ContainerUtils.add(panel, field, 1, intOptionsCount, 1, 1);
+            ContainerUtils.add(panel, slider, 2, intOptionsCount, 1, 1);
+            ++intOptionsCount;
+            componentMap.put(name, field);
+
+        }
     }
 
 

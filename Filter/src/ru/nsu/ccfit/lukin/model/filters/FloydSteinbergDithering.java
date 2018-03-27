@@ -1,10 +1,8 @@
 package ru.nsu.ccfit.lukin.model.filters;
 
-import ru.nsu.ccfit.lukin.model.filters.options.FilterOption;
-import ru.nsu.ccfit.lukin.model.filters.options.IntegerFilterOption;
+import ru.nsu.ccfit.lukin.model.filters.options.NumberFilterOption;
 
 import java.awt.image.BufferedImage;
-import java.util.Map;
 
 public class FloydSteinbergDithering extends PixelFilter {
 
@@ -13,9 +11,9 @@ public class FloydSteinbergDithering extends PixelFilter {
     private int countB;
     public FloydSteinbergDithering(int countR, int countG, int countB) {
         super("Floyd-Steinberg filter");
-        addOption("count red", new IntegerFilterOption(2, 256).setValue(countR));
-        addOption("count green", new IntegerFilterOption(2, 256).setValue(countG));
-        addOption("count blue", new IntegerFilterOption(2, 256).setValue(countB));
+        addOption("count red", new NumberFilterOption(2, 256).setValue(countR));
+        addOption("count green", new NumberFilterOption(2, 256).setValue(countG));
+        addOption("count blue", new NumberFilterOption(2, 256).setValue(countB));
     }
 
     @Override
@@ -34,9 +32,6 @@ public class FloydSteinbergDithering extends PixelFilter {
         int errorR = ((((oldP >> 16) & 0xFF) - ((newP >> 16)   & 0xFF)));
         int errorG = ((((oldP >> 8)  & 0xFF) - ((newP >> 8)    & 0xFF)));
         int errorB = ((((oldP)       & 0xFF) - ((newP)         & 0xFF)));
-//        int error = ((errorR >= 0 ? errorR : 0xF00 - errorR) << 16) |
-//                ((errorG >= 0 ? errorG : 0xF00 - errorG) << 8) |
-//                ((errorB >= 0 ? errorB : 0xF00 - errorB));
         if (x + 1 < w)
             image.setRGB(x + 1, y,         filterPixel(image.getRGB(x + 1, y), errorR, errorG, errorB, 7));
         if (x - 1 >= 0 && y + 1 < h)
