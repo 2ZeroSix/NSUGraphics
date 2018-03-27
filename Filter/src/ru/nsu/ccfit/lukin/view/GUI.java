@@ -1,8 +1,12 @@
 package ru.nsu.ccfit.lukin.view;
 
-import jdk.nashorn.internal.scripts.JD;
 import ru.nsu.ccfit.lukin.model.filters.*;
 import ru.nsu.ccfit.lukin.model.observables.FullImageObservable;
+import ru.nsu.ccfit.lukin.view.buttons.FilterButton;
+import ru.nsu.ccfit.lukin.view.buttons.ImageObserverButton;
+import ru.nsu.ccfit.lukin.view.imagePanels.FilteredImage;
+import ru.nsu.ccfit.lukin.view.imagePanels.FullImage;
+import ru.nsu.ccfit.lukin.view.imagePanels.SelectedImage;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -12,10 +16,8 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
-import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Consumer;
 
 public class GUI extends ToolBarStatusBarFrame{
     private FullImage fullImage;

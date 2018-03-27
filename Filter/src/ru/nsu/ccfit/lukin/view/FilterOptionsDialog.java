@@ -3,6 +3,7 @@ package ru.nsu.ccfit.lukin.view;
 import ru.nsu.ccfit.lukin.model.filters.Filter;
 import ru.nsu.ccfit.lukin.model.filters.options.FilterOption;
 import ru.nsu.ccfit.lukin.model.filters.options.IntegerFilterOption;
+import ru.nsu.ccfit.lukin.view.imagePanels.FilteredImage;
 
 import javax.swing.*;
 import java.awt.*;

@@ -1,4 +1,4 @@
-package ru.nsu.ccfit.lukin.view;
+package ru.nsu.ccfit.lukin.view.imagePanels;
 
 import ru.nsu.ccfit.lukin.model.observables.ImageObservable;
 import ru.nsu.ccfit.lukin.view.observers.ImageObserver;

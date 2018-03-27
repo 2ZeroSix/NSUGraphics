@@ -1,4 +1,4 @@
-package ru.nsu.ccfit.lukin.view;
+package ru.nsu.ccfit.lukin.view.imagePanels;
 
 import ru.nsu.ccfit.lukin.model.ImageUtils;
 import ru.nsu.ccfit.lukin.model.filters.*;
@@ -11,7 +11,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Set;
 
 public class FilteredImage extends ImagePanel implements FilteredImageObservable, ImageObserver{
