@@ -17,6 +17,7 @@ import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,7 +26,7 @@ public class GUI extends ToolBarStatusBarFrame{
     private SelectedImage selectedImage;
     private FilteredImage filteredImage;
     private Map<String, Container> dialogs;
-    private Map<String, FilterOptionsDialog> filterOptionsDialogs;
+    private ArrayList<FilterOptionsDialog> filterOptionsDialogs;
     private JFileChooser fileChooser = new JFileChooser();
 
     public GUI() {
@@ -38,8 +39,8 @@ public class GUI extends ToolBarStatusBarFrame{
         initWindow();
         initWorkspace();
         initMenuBar();
-        initToolBarItems();
         initAdditionalFrames();
+        initToolBarItems();
     }
 
     private void initWindow() {
@@ -133,60 +134,63 @@ public class GUI extends ToolBarStatusBarFrame{
 
 
         toolBar.addSeparator();
-//        * ч/б
-        FilterButton blackWhiteButton = new FilterButton(this,
-                new FilterOptionsDialog(new BlackAndWhiteFilter(), filteredImage, true));
-        toolBar.add(blackWhiteButton);
-//        * Негатив
-        FilterButton negativeButton = new FilterButton(this,
-                new FilterOptionsDialog(new NegativeFilter(), filteredImage, true));
-        toolBar.add(negativeButton);
-//        * Дизеринг
-//        *   Флойда-Стейнберга - FloydSteinbergDithering
-        FilterButton floydSteinbergButton = new FilterButton(this,
-                new FilterOptionsDialog(new FloydSteinbergDithering(8, 8, 4), filteredImage, true));
-        toolBar.add(floydSteinbergButton);
-//        *   ordered dither - OrderedDithering
-        FilterButton orderedDitheringButton = new FilterButton(this,
-                new FilterOptionsDialog(new OrderedDithering(8, 8, 4), filteredImage, true));
-        toolBar.add(orderedDitheringButton);
-//        * Удвоение - NearestNeighborDoubleFilter
-        FilterButton doubleFilterButton = new FilterButton(this,
-                new FilterOptionsDialog(new NearestNeighborDoubleFilter(), filteredImage, true));
-        toolBar.add(doubleFilterButton);
-//        * Дифференцирующий фильтр
-//        * Собеля - SobelFilter
-        FilterButton sobelFilter = new FilterButton(this,
-                new FilterOptionsDialog(new SobelFilter(80), filteredImage, true));
-        toolBar.add(sobelFilter);
-//        * Робертса -
-        FilterButton robertsFilter = new FilterButton(this,
-                new FilterOptionsDialog(new RobertsFilter(25), filteredImage, true));
-        toolBar.add(robertsFilter);
-//        * Сглаживающий фльтр -
-        FilterButton smoothFilterButton = new FilterButton(this,
-                new FilterOptionsDialog(new SmoothFilter(), filteredImage, true));
-        toolBar.add(smoothFilterButton);
-//        * Фильтр повышения резкости -
-        FilterButton sharpFilterButton = new FilterButton(this,
-                new FilterOptionsDialog(new SharpFilter(), filteredImage, true));
-        toolBar.add(sharpFilterButton);
-//        * Тиснение -
-        FilterButton embossFilterButton = new FilterButton(this,
-                new FilterOptionsDialog(new EmbossFilter(), filteredImage, true));
-        toolBar.add(embossFilterButton);
-//        * Акварелизация -
-        FilterButton aquaFilterButton = new FilterButton(this,
-                new FilterOptionsDialog(new AquaFilter(), filteredImage, true));
-        toolBar.add(aquaFilterButton);
-//        * поворот
-        FilterButton rotateFilterButton = new FilterButton(this,
-                new FilterOptionsDialog(new RotateFilter(0.), filteredImage, true));
-        toolBar.add(rotateFilterButton);
-//        * гамма
-        FilterButton gammaFilterButton = new FilterButton(this,
-                new FilterOptionsDialog(new GammaFilter(1.), filteredImage, true));
-        toolBar.add(gammaFilterButton);
+        for (FilterOptionsDialog dialog : filterOptionsDialogs) {
+            toolBar.add(new FilterButton(this, dialog));
+        }
+////        * ч/б
+//        FilterButton blackWhiteButton = new FilterButton(this,
+//                new FilterOptionsDialog(new BlackAndWhiteFilter(), filteredImage, true));
+//        toolBar.add(blackWhiteButton);
+////        * Негатив
+//        FilterButton negativeButton = new FilterButton(this,
+//                new FilterOptionsDialog(new NegativeFilter(), filteredImage, true));
+//        toolBar.add(negativeButton);
+////        * Дизеринг
+////        *   Флойда-Стейнберга - FloydSteinbergDithering
+//        FilterButton floydSteinbergButton = new FilterButton(this,
+//                new FilterOptionsDialog(new FloydSteinbergDithering(8, 8, 4), filteredImage, true));
+//        toolBar.add(floydSteinbergButton);
+////        *   ordered dither - OrderedDithering
+//        FilterButton orderedDitheringButton = new FilterButton(this,
+//                new FilterOptionsDialog(new OrderedDithering(8, 8, 4), filteredImage, true));
+//        toolBar.add(orderedDitheringButton);
+////        * Удвоение - NearestNeighborDoubleFilter
+//        FilterButton doubleFilterButton = new FilterButton(this,
+//                new FilterOptionsDialog(new NearestNeighborDoubleFilter(), filteredImage, true));
+//        toolBar.add(doubleFilterButton);
+////        * Дифференцирующий фильтр
+////        * Собеля - SobelFilter
+//        FilterButton sobelFilter = new FilterButton(this,
+//                new FilterOptionsDialog(new SobelFilter(80), filteredImage, true));
+//        toolBar.add(sobelFilter);
+////        * Робертса -
+//        FilterButton robertsFilter = new FilterButton(this,
+//                new FilterOptionsDialog(new RobertsFilter(25), filteredImage, true));
+//        toolBar.add(robertsFilter);
+////        * Сглаживающий фльтр -
+//        FilterButton smoothFilterButton = new FilterButton(this,
+//                new FilterOptionsDialog(new SmoothFilter(), filteredImage, true));
+//        toolBar.add(smoothFilterButton);
+////        * Фильтр повышения резкости -
+//        FilterButton sharpFilterButton = new FilterButton(this,
+//                new FilterOptionsDialog(new SharpFilter(), filteredImage, true));
+//        toolBar.add(sharpFilterButton);
+////        * Тиснение -
+//        FilterButton embossFilterButton = new FilterButton(this,
+//                new FilterOptionsDialog(new EmbossFilter(), filteredImage, true));
+//        toolBar.add(embossFilterButton);
+////        * Акварелизация -
+//        FilterButton aquaFilterButton = new FilterButton(this,
+//                new FilterOptionsDialog(new AquaFilter(), filteredImage, true));
+//        toolBar.add(aquaFilterButton);
+////        * поворот
+//        FilterButton rotateFilterButton = new FilterButton(this,
+//                new FilterOptionsDialog(new RotateFilter(0.), filteredImage, true));
+//        toolBar.add(rotateFilterButton);
+////        * гамма
+//        FilterButton gammaFilterButton = new FilterButton(this,
+//                new FilterOptionsDialog(new GammaFilter(1.), filteredImage, true));
+//        toolBar.add(gammaFilterButton);
 //        * selected -> filtered
 //        * selected <- filtered
 
@@ -235,6 +239,23 @@ public class GUI extends ToolBarStatusBarFrame{
                     "jpg", "jpeg", "bmp", "png", "svg"));
             fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         }
+        {
+            filterOptionsDialogs = new ArrayList<>();
+            filterOptionsDialogs.add(new FilterOptionsDialog(new BlackAndWhiteFilter(), filteredImage, true));
+            filterOptionsDialogs.add(new FilterOptionsDialog(new NegativeFilter(), filteredImage, true));
+            filterOptionsDialogs.add(new FilterOptionsDialog(new FloydSteinbergDithering(8, 8, 4), filteredImage, true));
+            filterOptionsDialogs.add(new FilterOptionsDialog(new OrderedDithering(8, 8, 4), filteredImage, true));
+            filterOptionsDialogs.add(new FilterOptionsDialog(new NearestNeighborDoubleFilter(), filteredImage, true));
+            filterOptionsDialogs.add(new FilterOptionsDialog(new SobelFilter(80), filteredImage, true));
+            filterOptionsDialogs.add(new FilterOptionsDialog(new RobertsFilter(25), filteredImage, true));
+            filterOptionsDialogs.add(new FilterOptionsDialog(new SmoothFilter(), filteredImage, true));
+            filterOptionsDialogs.add(new FilterOptionsDialog(new SharpFilter(), filteredImage, true));
+            filterOptionsDialogs.add(new FilterOptionsDialog(new EmbossFilter(), filteredImage, true));
+            filterOptionsDialogs.add(new FilterOptionsDialog(new SmoothFilter(), filteredImage, true));
+            filterOptionsDialogs.add(new FilterOptionsDialog(new AquaFilter(), filteredImage, true));
+            filterOptionsDialogs.add(new FilterOptionsDialog(new RotateFilter(0.), filteredImage, true));
+            filterOptionsDialogs.add(new FilterOptionsDialog(new GammaFilter(1.), filteredImage, true));
+        }
         // TODO implement additional frames
 //        optionsFrame = new OptionsFrame(this, controller);
 //        newDocumentFrame = new NewDocumentFrame(this, controller);
@@ -248,7 +269,6 @@ public class GUI extends ToolBarStatusBarFrame{
     }
 
     private void exit() {
-        // TODO implement exit
         System.exit(0);
     }
 
