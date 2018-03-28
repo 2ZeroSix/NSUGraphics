@@ -10,6 +10,7 @@ import ru.nsu.ccfit.lukin.view.observers.ImageObserver;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import java.awt.*;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.function.Consumer;
@@ -53,10 +54,13 @@ public class ImageObserverButton extends JButton implements FullImageObserver, F
                 try {
                     iconSetter[i].accept(new ImageIcon(
                             ImageIO.read(getClass()
-                                    .getResource("/icons/" + iconName + suffixes[i] + "." + extension))));
+                                    .getResource("/icons/" + iconName + suffixes[i] + "." + extension)).getScaledInstance(20, 20, Image.SCALE_SMOOTH)));
                 } catch (IllegalArgumentException | IOException ignore) {
                 }
             }
+        }
+        if (getIcon() == null) {
+            System.err.println("icon is not set for " + iconName);
         }
     }
 
