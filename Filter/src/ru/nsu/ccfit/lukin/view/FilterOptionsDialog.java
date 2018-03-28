@@ -4,6 +4,7 @@ import ru.nsu.ccfit.lukin.model.filters.Filter;
 import ru.nsu.ccfit.lukin.model.filters.options.FilterOption;
 import ru.nsu.ccfit.lukin.model.filters.options.NumberFilterOption;
 import ru.nsu.ccfit.lukin.view.imagePanels.FilteredImage;
+import ru.nsu.ccfit.lukin.view.imagePanels.SelectedImage;
 
 import javax.swing.*;
 import java.awt.*;
@@ -16,15 +17,13 @@ import java.util.function.Consumer;
 public class FilterOptionsDialog {
     private JPanel panel = new JPanel(new GridBagLayout());
     private Filter filter;
-    private FilteredImage image;
-    private boolean instantFiltering;
+    private FilteredImage filteredImage;
     private boolean haveOptions;
     private Map<String, JFormattedTextField> componentMap = new HashMap<>();
 
-    public FilterOptionsDialog(Filter filter, FilteredImage image, boolean instantFiltering) {
+    public FilterOptionsDialog(Filter filter, FilteredImage filteredImage) {
         this.filter = filter;
-        this.image = image;
-        this.instantFiltering = instantFiltering;
+        this.filteredImage = filteredImage;
         Map<String, FilterOption<?>> options = filter.getOptions();
         if (!options.isEmpty()) {
             haveOptions = true;
@@ -33,9 +32,7 @@ public class FilterOptionsDialog {
                     NumberFilterOption<?> numOpt = (NumberFilterOption) option;
                     addNumberInput(name, numOpt.getMin(), numOpt.getMax(), numOpt.getValue(), val -> {
                         filter.setOption(name, val);
-                        if (instantFiltering) {
-                            image.setFilter(filter);
-                        }
+                        filteredImage.setFilter(filter);
                     });
                 }
             });
@@ -45,7 +42,6 @@ public class FilterOptionsDialog {
     }
 
     private void updateOptions() {
-        final int[] i = {0};
         filter.getOptions().forEach((name, option) -> {
             if (option instanceof NumberFilterOption) {
                 NumberFilterOption intOpt = (NumberFilterOption) option;
@@ -55,24 +51,26 @@ public class FilterOptionsDialog {
     }
 
     public void showDialog(Component parentComponent) {
+        if (getFilteredImage().getSelectedImage().getImage() == null) {
+            JOptionPane.showMessageDialog(parentComponent, "Image is not selected",
+                    "Can't apply filter", JOptionPane.PLAIN_MESSAGE);
+            return;
+        }
         if (haveOptions) {
             updateOptions();
-            if (instantFiltering) {
-                image.setFilter(filter);
-
-            }
+            filteredImage.setFilter(filter);
             int retval = JOptionPane.showConfirmDialog(parentComponent, panel, filter.getName() + " Options",
-                    instantFiltering ? JOptionPane.DEFAULT_OPTION : JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-            if (!instantFiltering) {
+                    filteredImage.isAutoUpdate() ? JOptionPane.DEFAULT_OPTION : JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+            if (!filteredImage.isAutoUpdate()) {
                 switch (retval) {
                     case JOptionPane.OK_OPTION:
-                        image.setFilter(filter);
+                        filteredImage.applyFilter();
                     default:
                         //pass
                 }
             }
         } else {
-            image.setFilter(filter);
+            filteredImage.setFilter(filter);
         }
     }
 
@@ -136,7 +134,7 @@ public class FilterOptionsDialog {
         return filter;
     }
 
-    public FilteredImage getImage() {
-        return image;
+    public FilteredImage getFilteredImage() {
+        return filteredImage;
     }
 }

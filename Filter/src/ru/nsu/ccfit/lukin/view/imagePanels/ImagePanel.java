@@ -34,7 +34,7 @@ public class ImagePanel extends JPanel implements ImageObservable{
     @Override
     public BufferedImage getImage() {
 //        ImageIcon icon = (ImageIcon)iconLabel.getIcon();
-//        return (BufferedImage) (icon != null ? (icon).getImage() : null);
+//        return (BufferedImage) (icon != null ? (icon).getFilteredImage() : null);
         return image;
     }
 
@@ -56,7 +56,7 @@ public class ImagePanel extends JPanel implements ImageObservable{
     }
 
     public ImagePanel setImage(BufferedImage image) {
-//        if (getImage() != image) {
+//        if (getFilteredImage() != image) {
 //            iconLabel.setIcon(image != null ? new ImageIcon(image) : null);
 //        }
 //        iconLabel.repaint();

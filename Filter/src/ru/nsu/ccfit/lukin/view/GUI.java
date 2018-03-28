@@ -3,7 +3,7 @@ package ru.nsu.ccfit.lukin.view;
 import ru.nsu.ccfit.lukin.model.filters.*;
 import ru.nsu.ccfit.lukin.model.observables.FullImageObservable;
 import ru.nsu.ccfit.lukin.view.buttons.FilterButton;
-import ru.nsu.ccfit.lukin.view.buttons.FilterMenuItem;
+import ru.nsu.ccfit.lukin.view.menuItems.FilterMenuItem;
 import ru.nsu.ccfit.lukin.view.buttons.ImageObserverButton;
 import ru.nsu.ccfit.lukin.view.imagePanels.FilteredImage;
 import ru.nsu.ccfit.lukin.view.imagePanels.FullImage;
@@ -27,7 +27,7 @@ public class GUI extends ToolBarStatusBarFrame{
     private SelectedImage selectedImage;
     private FilteredImage filteredImage;
     private Map<String, Container> dialogs;
-    private ArrayList<FilterOptionsDialog> filterOptionsDialogs;
+    private ArrayList<Filter> filters;
     private JFileChooser fileChooser = new JFileChooser();
 
     public GUI() {
@@ -82,10 +82,19 @@ public class GUI extends ToolBarStatusBarFrame{
 
 
             JMenu edit = new JMenu("Edit");
-            for (FilterOptionsDialog dialog : filterOptionsDialogs) {
-                edit.add(new FilterMenuItem(this, dialog));
+//            JMenuItem selectionItem = new JMenuItem("start/stop selection");
+//            selectionItem.addActionListener(ae -> {
+//                if (fullImage.getImage() != null) {
+//                    fullImage.setSelectable(fullImage.isSelectable());
+//                } else {
+//                    JOptionPane.showMessageDialog(GUI.this, "Nothing to select",
+//                            "Select error", JOptionPane.PLAIN_MESSAGE);
+//                }
+//            });
+//            edit.add();
+            for (Filter filter: filters) {
+                edit.add(new FilterMenuItem(this, filter, selectedImage, filteredImage));
             }
-            // TODO add edit menu items
             menuBar.add(edit);
 
             JMenu help = new JMenu("Help");
@@ -138,8 +147,8 @@ public class GUI extends ToolBarStatusBarFrame{
 
 
         toolBar.addSeparator();
-        for (FilterOptionsDialog dialog : filterOptionsDialogs) {
-            JButton button = new FilterButton(this, dialog);
+        for (Filter filter : filters) {
+            JButton button = new FilterButton(this, filter, filteredImage);
             toolBar.add(button);
             group.add(button);
         }
@@ -193,20 +202,20 @@ public class GUI extends ToolBarStatusBarFrame{
             fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         }
         {
-            filterOptionsDialogs = new ArrayList<>();
-            filterOptionsDialogs.add(new FilterOptionsDialog(new BlackAndWhiteFilter(), filteredImage, true));
-            filterOptionsDialogs.add(new FilterOptionsDialog(new NegativeFilter(), filteredImage, true));
-            filterOptionsDialogs.add(new FilterOptionsDialog(new FloydSteinbergDithering(8, 8, 4), filteredImage, true));
-            filterOptionsDialogs.add(new FilterOptionsDialog(new OrderedDithering(8, 8, 4), filteredImage, true));
-            filterOptionsDialogs.add(new FilterOptionsDialog(new NearestNeighborDoubleFilter(), filteredImage, true));
-            filterOptionsDialogs.add(new FilterOptionsDialog(new SobelFilter(80), filteredImage, true));
-            filterOptionsDialogs.add(new FilterOptionsDialog(new RobertsFilter(25), filteredImage, true));
-            filterOptionsDialogs.add(new FilterOptionsDialog(new SmoothFilter(), filteredImage, true));
-            filterOptionsDialogs.add(new FilterOptionsDialog(new SharpFilter(), filteredImage, true));
-            filterOptionsDialogs.add(new FilterOptionsDialog(new EmbossFilter(), filteredImage, true));
-            filterOptionsDialogs.add(new FilterOptionsDialog(new AquaFilter(), filteredImage, true));
-            filterOptionsDialogs.add(new FilterOptionsDialog(new RotateFilter(0.), filteredImage, true));
-            filterOptionsDialogs.add(new FilterOptionsDialog(new GammaFilter(1.), filteredImage, true));
+            filters = new ArrayList<>();
+            filters.add(new BlackAndWhiteFilter());
+            filters.add(new NegativeFilter());
+            filters.add(new FloydSteinbergDithering(8, 8, 4));
+            filters.add(new OrderedDithering(8, 8, 4));
+            filters.add(new NearestNeighborDoubleFilter());
+            filters.add(new SobelFilter(80));
+            filters.add(new RobertsFilter(25));
+            filters.add(new SmoothFilter());
+            filters.add(new SharpFilter());
+            filters.add(new EmbossFilter());
+            filters.add(new AquaFilter());
+            filters.add(new RotateFilter(0.));
+            filters.add(new GammaFilter(1.));
         }
     }
 

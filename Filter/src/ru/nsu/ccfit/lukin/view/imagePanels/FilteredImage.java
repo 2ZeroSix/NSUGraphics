@@ -76,9 +76,8 @@ public class FilteredImage extends ImagePanel implements FilteredImageObservable
 
     public FilteredImage setFilter(Filter filter) {
         this.filter = filter;
-        synchronized (update) {
-            updated = true;
-            update.notify();
+        if (autoUpdate) {
+            applyFilter();
         }
         return this;
     }
@@ -113,5 +112,28 @@ public class FilteredImage extends ImagePanel implements FilteredImageObservable
     @Override
     public void updateImage(ImageObservable observable) {
         if (autoUpdate) setFilter(getFilter());
+    }
+
+    public SelectedImage getSelectedImage() {
+        return selectedImage;
+    }
+
+    public void setSelectedImage(SelectedImage selectedImage) {
+        this.selectedImage = selectedImage;
+    }
+
+    public boolean isAutoUpdate() {
+        return autoUpdate;
+    }
+
+    public void setAutoUpdate(boolean autoUpdate) {
+        this.autoUpdate = autoUpdate;
+    }
+
+    public void applyFilter() {
+        synchronized (update) {
+            updated = true;
+            update.notify();
+        }
     }
 }
