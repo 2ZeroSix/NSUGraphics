@@ -2,6 +2,8 @@ package ru.nsu.ccfit.lukin.model.filters;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.PriorityQueue;
 
 public class AquaFilter extends PixelFilterWithTemp {
     public AquaFilter() {
@@ -11,30 +13,23 @@ public class AquaFilter extends PixelFilterWithTemp {
     @Override
     protected void realApply(BufferedImage image) {
         super.realApply(image);
-//        new SharpFilter().realApply(image);
+        new SharpFilter().realApply(image);
     }
 
-    private ArrayList<Integer> R = new ArrayList<>();
-    private ArrayList<Integer> G = new ArrayList<>();
-    private ArrayList<Integer> B = new ArrayList<>();
+    private int[][] arr = new int[3][25];
     @Override
     protected int filterPixel(BufferedImage image, int x, int y) {
         for (int i = -2; i <= 2; ++i) {
             for (int j = -2; j <= 2; ++j) {
-                R.add(component(image, x + i, y + j, 2));
-                G.add(component(image, x + i, y + j, 1));
-                B.add(component(image, x + i, y + j, 0));
+                for (int k = 0; k <= 2; ++k) {
+                    arr[k][(i + 2) * 5 + (j + 2)] = component(image, x + i, y + j, k);
+                }
             }
         }
-        R.sort(Integer::compareTo);
-        G.sort(Integer::compareTo);
-        B.sort(Integer::compareTo);
-        int r = R.get(R.size() / 2);
-        int g = G.get(G.size() / 2);
-        int b = B.get(B.size() / 2);
-        R.clear();
-        G.clear();
-        B.clear();
-        return 0xFF000000 | (r << 16) | (g << 8) | b;
+        for (int k = 0; k <= 2; ++k) {
+            Arrays.sort(arr[k]);
+            arr[k][0] = (arr[k][arr.length / 2] + arr[k][(arr.length + 1) / 2]) / 2;
+        }
+        return 0xFF000000 | (arr[2][0] << 16) | (arr[1][0] << 8) | arr[0][0];
     }
 }
