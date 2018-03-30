@@ -1,17 +1,19 @@
 package ru.nsu.ccfit.lukin.view;
 
+import ru.nsu.ccfit.lukin.model.ImageUtils;
 import ru.nsu.ccfit.lukin.model.filters.*;
 import ru.nsu.ccfit.lukin.model.observables.FullImageObservable;
 import ru.nsu.ccfit.lukin.view.buttons.FilterButton;
-import ru.nsu.ccfit.lukin.view.menuItems.FilterMenuItem;
 import ru.nsu.ccfit.lukin.view.buttons.ImageObserverButton;
 import ru.nsu.ccfit.lukin.view.imagePanels.FilteredImage;
 import ru.nsu.ccfit.lukin.view.imagePanels.FullImage;
 import ru.nsu.ccfit.lukin.view.imagePanels.SelectedImage;
+import ru.nsu.ccfit.lukin.view.menuItems.FilterMenuItem;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.filechooser.FileView;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -21,8 +23,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.WeakHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-public class GUI extends ToolBarStatusBarFrame{
+public class GUI extends ToolBarStatusBarFrame {
     private FullImage fullImage;
     private SelectedImage selectedImage;
     private FilteredImage filteredImage;
@@ -92,7 +97,7 @@ public class GUI extends ToolBarStatusBarFrame{
 //                }
 //            });
 //            edit.add();
-            for (Filter filter: filters) {
+            for (Filter filter : filters) {
                 edit.add(new FilterMenuItem(this, filter, selectedImage, filteredImage));
             }
             menuBar.add(edit);
@@ -154,7 +159,10 @@ public class GUI extends ToolBarStatusBarFrame{
         }
 
         ImageObserverButton copyLeftButton = new ImageObserverButton("copy left", selectedImage, filteredImage);
-        copyLeftButton.addActionListener(ae -> selectedImage.setImage(filteredImage.getImage()));
+        copyLeftButton.addActionListener(ae -> {
+            selectedImage.setImage(ImageUtils.copy(filteredImage.getImage()));
+            filteredImage.clean();
+        });
         toolBar.add(copyLeftButton);
     }
 
@@ -200,6 +208,61 @@ public class GUI extends ToolBarStatusBarFrame{
             fileChooser.setFileFilter(new FileNameExtensionFilter("images",
                     "jpg", "jpeg", "bmp", "png", "svg"));
             fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+            fileChooser.setFileView(new FileView() {
+                Map<File, ImageIcon> imageMap = new WeakHashMap<>();
+                private int ICON_SIZE = 20;
+                Image defaultImage;
+                private final ExecutorService executor = Executors.newCachedThreadPool();
+                FileView parent = fileChooser.getFileView();
+
+                {
+                    try {
+                        defaultImage = ImageIO.read(getClass().getResource("/icons/loading.png")).getScaledInstance(20, 20, Image.SCALE_SMOOTH);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                @Override
+                public Icon getIcon(File f) {
+                    if (f.isDirectory() || !fileChooser.getFileFilter().accept(f))
+                        return parent != null ? parent.getIcon(f) : super.getIcon(f);
+                    ImageIcon imageIcon = new ImageIcon(defaultImage);
+                    Icon icon = imageMap.get(f);
+                    synchronized (imageMap) {
+                        if (icon != null) return icon;
+                        imageMap.put(f, imageIcon);
+                    }
+                    executor.execute(() -> {
+                        try {
+                            BufferedImage image = ImageIO.read(f);
+                            int w = image.getWidth();
+                            int h = image.getHeight();
+                            int dw = 0;
+                            int dh = 0;
+                            if (w > h) {
+                                h = h * ICON_SIZE / w;
+                                w = ICON_SIZE;
+                                dh = (ICON_SIZE - h) / 2;
+                            } else {
+                                w = w * ICON_SIZE / h;
+                                h = ICON_SIZE;
+                                dw = (ICON_SIZE - w) / 2;
+                            }
+                            Image scaledImage = ImageIO.read(f).getScaledInstance(w, h, Image.SCALE_SMOOTH);
+                            BufferedImage centeredImage = new BufferedImage(ICON_SIZE, ICON_SIZE, BufferedImage.TYPE_INT_ARGB);
+                            Graphics g = centeredImage.getGraphics();
+                            g.drawImage(scaledImage, dw, dh, null);
+                            g.dispose();
+                            imageIcon.setImage(centeredImage);
+                            fileChooser.repaint();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    });
+                    return imageIcon;
+                }
+            });
         }
         {
             filters = new ArrayList<>();
@@ -249,6 +312,7 @@ public class GUI extends ToolBarStatusBarFrame{
             JOptionPane.showMessageDialog(this, "can't choose this file", "open file error", JOptionPane.ERROR_MESSAGE);
         }
     }
+
     private void saveFile() {
         if (filteredImage.getImage() != null) {
             int retval = fileChooser.showSaveDialog(this);

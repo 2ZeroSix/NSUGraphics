@@ -28,7 +28,7 @@ public class AquaFilter extends PixelFilterWithTemp {
         }
         for (int k = 0; k <= 2; ++k) {
             Arrays.sort(arr[k]);
-            arr[k][0] = (arr[k][arr.length / 2] + arr[k][(arr.length + 1) / 2]) / 2;
+            arr[k][0] = (arr[k][arr[k].length / 2] + arr[k][(arr[k].length + 1) / 2]) / 2;
         }
         return 0xFF000000 | (arr[2][0] << 16) | (arr[1][0] << 8) | arr[0][0];
     }

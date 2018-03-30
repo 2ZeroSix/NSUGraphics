@@ -1,7 +1,7 @@
 package ru.nsu.ccfit.lukin.view.imagePanels;
 
 import ru.nsu.ccfit.lukin.model.ImageUtils;
-import ru.nsu.ccfit.lukin.model.filters.*;
+import ru.nsu.ccfit.lukin.model.filters.Filter;
 import ru.nsu.ccfit.lukin.model.observables.FilteredImageObservable;
 import ru.nsu.ccfit.lukin.model.observables.ImageObservable;
 import ru.nsu.ccfit.lukin.view.observers.FilteredImageObserver;
