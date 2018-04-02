@@ -35,8 +35,10 @@ public class FilterButton extends ImageObserverButton implements ActionListener 
 
     @Override
     public void updateImage(ImageObservable observable) {
-        if (observable.equals(dialog.getFilteredImage().getSelectedImage())) {
-            setEnabled(observable.getImage() != null);
+        try {
+            setEnabled(dialog.getFilteredImage().getSelectedImage().getImage() != null);
+        } catch (NullPointerException e) {
+            setEnabled(false);
         }
     }
 

@@ -43,7 +43,7 @@ public class FilteredImage extends ImagePanel implements FilteredImageObservable
                             updated = false;
 
                             image = selectedImage.getImage();
-                            if (image != null && filter != null) {
+                            if (image != null) {
                                 if (tmpImage == null) tmpImage = ImageUtils.copy(image);
                                 else tmpImage = ImageUtils.copy(image, tmpImage);
                             } else {
@@ -111,7 +111,7 @@ public class FilteredImage extends ImagePanel implements FilteredImageObservable
 
     @Override
     public void updateImage(ImageObservable observable) {
-        if (autoUpdate) setFilter(getFilter());
+        if (autoUpdate) applyFilter();
     }
 
     public SelectedImage getSelectedImage() {
@@ -120,6 +120,12 @@ public class FilteredImage extends ImagePanel implements FilteredImageObservable
 
     public void setSelectedImage(SelectedImage selectedImage) {
         this.selectedImage = selectedImage;
+    }
+
+    @Override
+    public void clean() {
+        setFilter(null);
+        super.clean();
     }
 
     public boolean isAutoUpdate() {

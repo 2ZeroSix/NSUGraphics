@@ -1,10 +1,13 @@
 package ru.nsu.ccfit.lukin.model.filters;
 
 import ru.nsu.ccfit.lukin.model.filters.options.FilterOption;
+import ru.nsu.ccfit.lukin.view.observers.FilterObserver;
 
 import java.awt.image.BufferedImage;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public abstract class AbstractFilter implements Filter {
     private Map<String, FilterOption<?>> options = new HashMap<>();
@@ -40,6 +43,7 @@ public abstract class AbstractFilter implements Filter {
         FilterOption option = options.get(name);
         if (option != null) {
             option.setValue(value);
+            notifyOption(name);
         } else {
             throw new IllegalArgumentException("No such option: " + name);
         }
@@ -77,4 +81,21 @@ public abstract class AbstractFilter implements Filter {
         return (image.getRGB(x, y) >> (8 * offset)) & 0xFF;
     }
 
+    Set<FilterObserver> observers = new HashSet<>();
+
+    @Override
+    public void notifyOption(String name) {
+        for (FilterObserver observer : observers)
+            observer.updateOption(name);
+    }
+
+    @Override
+    public void addFilterObserver(FilterObserver observer) {
+        observers.add(observer);
+    }
+
+    @Override
+    public void removeFilterObserver(FilterObserver observer) {
+        observers.remove(observer);
+    }
 }

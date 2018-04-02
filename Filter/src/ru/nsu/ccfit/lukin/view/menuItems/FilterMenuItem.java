@@ -28,7 +28,11 @@ public class FilterMenuItem extends ImageObserverMenuItem implements ActionListe
 
     @Override
     public void updateImage(ImageObservable observable) {
-        setEnabled(dialog.getFilteredImage().getSelectedImage().getImage() != null);
+        try {
+            setEnabled(dialog.getFilteredImage().getSelectedImage().getImage() != null);
+        } catch (NullPointerException e) {
+            setEnabled(false);
+        }
     }
 
     @Override

@@ -1,6 +1,6 @@
 package ru.nsu.ccfit.lukin.model.filters.options;
 
-public abstract class FilterOption<T> {
+public class FilterOption<T> {
     private T value;
 
     public FilterOption(T value) {

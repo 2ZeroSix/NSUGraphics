@@ -14,6 +14,7 @@ public class ImageObserverMenuItem extends JMenuItem implements FullImageObserve
         super(name);
         for (ImageObservable imageObservable : imageObservables) {
             imageObservable.addImageObserver(this);
+            updateImage(imageObservable);
         }
     }
 

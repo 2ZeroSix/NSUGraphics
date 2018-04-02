@@ -16,9 +16,9 @@ public class KernelFilter extends PixelFilterWithTemp {
     protected int filterPixel(BufferedImage image, int x, int y) {
         int[] rgb = new int[3];
         for (int i = -(matrix.length - 1) / 2; i <= matrix.length / 2; ++i) {
-            for (int j = -(matrix[0].length - 1) / 2; j <= (matrix[0].length / 2); ++j) {
+            for (int j = -(matrix[i].length - 1) / 2; j <= (matrix[i].length / 2); ++j) {
                 for (int k = 0; k <= 2; ++k) {
-                    rgb[k] += matrix[(matrix.length - 1) / 2 + i][(matrix[0].length - 1) / 2 + j]
+                    rgb[k] += matrix[(matrix.length - 1) / 2 + i][(matrix[i].length - 1) / 2 + j]
                             * component(image, x + i, y + j, k);
                 }
             }

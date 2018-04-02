@@ -47,6 +47,7 @@ public class ImageObserverButton extends JButton implements FullImageObserver, F
     public ImageObserverButton(String iconName, ImageObservable... imageObservables) {
         for (ImageObservable imageObservable : imageObservables) {
             imageObservable.addImageObserver(this);
+            updateImage(imageObservable);
         }
         setToolTipText(iconName);
         for (int i = 0; i < suffixes.length; ++i) {

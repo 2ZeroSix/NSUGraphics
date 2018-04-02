@@ -2,13 +2,16 @@ package ru.nsu.ccfit.lukin.view;
 
 import ru.nsu.ccfit.lukin.model.ImageUtils;
 import ru.nsu.ccfit.lukin.model.filters.*;
+import ru.nsu.ccfit.lukin.model.observables.FilteredImageObservable;
 import ru.nsu.ccfit.lukin.model.observables.FullImageObservable;
+import ru.nsu.ccfit.lukin.model.observables.ImageObservable;
 import ru.nsu.ccfit.lukin.view.buttons.FilterButton;
 import ru.nsu.ccfit.lukin.view.buttons.ImageObserverButton;
 import ru.nsu.ccfit.lukin.view.imagePanels.FilteredImage;
 import ru.nsu.ccfit.lukin.view.imagePanels.FullImage;
 import ru.nsu.ccfit.lukin.view.imagePanels.SelectedImage;
 import ru.nsu.ccfit.lukin.view.menuItems.FilterMenuItem;
+import ru.nsu.ccfit.lukin.view.menuItems.ImageObserverMenuItem;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -69,7 +72,13 @@ public class GUI extends ToolBarStatusBarFrame {
                 newDocument.addActionListener(actionEvent -> fullImage.setImage(null));
                 file.add(newDocument);
 
-                JMenuItem save = new JMenuItem("save file");
+                JMenuItem save = new ImageObserverMenuItem("save file", filteredImage) {
+                    @Override
+                    public void updateImage(ImageObservable observable) {
+                        setEnabled(filteredImage.getImage()  != null);
+                        super.updateImage(observable);
+                    }
+                };
                 save.addActionListener(ae -> saveFile());
                 file.add(save);
 
@@ -126,8 +135,8 @@ public class GUI extends ToolBarStatusBarFrame {
         ImageObserverButton newFileButton = new ImageObserverButton("new file");
         newFileButton.addActionListener(ae -> {
             fullImage.clean();
-            selectedImage.setImage(null);
-            filteredImage.setImage(null);
+            selectedImage.clean();
+            filteredImage.clean();
         });
         toolBar.add(newFileButton);
 //        * open
@@ -135,13 +144,28 @@ public class GUI extends ToolBarStatusBarFrame {
         openFileButton.addActionListener(ae -> openFile());
         toolBar.add(openFileButton);
 //        * save
-        ImageObserverButton saveFileButton = new ImageObserverButton("save file");
+        ImageObserverButton saveFileButton = new ImageObserverButton("save file", filteredImage) {
+            @Override
+            public void updateImage(ImageObservable observable) {
+                setEnabled(filteredImage.getImage()  != null);
+                super.updateImage(observable);
+            }
+        };
         saveFileButton.addActionListener(ae -> saveFile());
         toolBar.add(saveFileButton);
 
         toolBar.addSeparator();
 //        * start/stop select
         ImageObserverButton selectButton = new ImageObserverButton("select", fullImage) {
+            @Override
+            public void updateImage(ImageObservable observable) {
+                try {
+                    setEnabled(fullImage.getImage() != null);
+                } catch (NullPointerException e) {
+                    setEnabled(false);
+                }
+            }
+
             @Override
             public void updateSelectable(FullImageObservable observable) {
                 this.setSelected(fullImage.isSelectable());
@@ -158,10 +182,16 @@ public class GUI extends ToolBarStatusBarFrame {
             group.add(button);
         }
 
-        ImageObserverButton copyLeftButton = new ImageObserverButton("copy left", selectedImage, filteredImage);
+        ImageObserverButton copyLeftButton = new ImageObserverButton("copy left", selectedImage, filteredImage) {
+            @Override
+            public void updateImage(ImageObservable observable) {
+                setEnabled(filteredImage.getImage()  != null);
+                super.updateImage(observable);
+            }
+        };
         copyLeftButton.addActionListener(ae -> {
             selectedImage.setImage(ImageUtils.copy(filteredImage.getImage()));
-            filteredImage.clean();
+            filteredImage.setFilter(null);
         });
         toolBar.add(copyLeftButton);
     }
@@ -218,7 +248,7 @@ public class GUI extends ToolBarStatusBarFrame {
                 {
                     try {
                         defaultImage = ImageIO.read(getClass().getResource("/icons/loading.png")).getScaledInstance(20, 20, Image.SCALE_SMOOTH);
-                    } catch (IOException e) {
+                    } catch (IllegalArgumentException | IOException e) {
                         e.printStackTrace();
                     }
                 }
