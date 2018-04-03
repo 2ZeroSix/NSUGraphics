@@ -3,12 +3,13 @@ package ru.nsu.ccfit.lukin.view.menuItems;
 import ru.nsu.ccfit.lukin.model.observables.FilteredImageObservable;
 import ru.nsu.ccfit.lukin.model.observables.FullImageObservable;
 import ru.nsu.ccfit.lukin.model.observables.ImageObservable;
+import ru.nsu.ccfit.lukin.view.observers.FilterObserver;
 import ru.nsu.ccfit.lukin.view.observers.FilteredImageObserver;
 import ru.nsu.ccfit.lukin.view.observers.FullImageObserver;
 
 import javax.swing.*;
 
-public class ImageObserverMenuItem extends JMenuItem implements FullImageObserver, FilteredImageObserver {
+public class ImageObserverMenuItem extends JMenuItem implements FullImageObserver, FilteredImageObserver, FilterObserver {
 
     public ImageObserverMenuItem(String name, ImageObservable... imageObservables) {
         super(name);
@@ -35,6 +36,11 @@ public class ImageObserverMenuItem extends JMenuItem implements FullImageObserve
 
     @Override
     public void updateImage(ImageObservable observable) {
+
+    }
+
+    @Override
+    public void updateOption(String name, Object value) {
 
     }
 }

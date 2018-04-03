@@ -158,15 +158,27 @@ public class FullImage extends ImagePanel implements FullImageObservable, MouseL
     @Override
     public void paint(Graphics graphics) {
         super.paint(graphics);
-        if (fullSizeImage != null && selectable) {
+        if (fullSizeImage != null && selectable && selection.width > 0 && selection.height > 0) {
             int w = fullSizeImage.getWidth();
             int h = fullSizeImage.getHeight();
             double multiplier = 350. / (w > h ? w : h);
             if (multiplier > 1.) multiplier = 1.;
-            Graphics2D g2d = (Graphics2D) graphics;
-            Stroke dashed = new BasicStroke(1, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{5, 3, 2, 3}, 0);
-            g2d.setStroke(dashed);
-            g2d.drawRect((int) (selection.x * multiplier), (int) (selection.y * multiplier), (int) (selection.width * multiplier), (int) (selection.height * multiplier));
+            BufferedImage image = super.getImage();
+            BufferedImage rect = new BufferedImage(selection.width, selection.height, BufferedImage.TYPE_INT_ARGB);
+            for (int x = 0; x < selection.width; ++x) {
+                rect.setRGB((int) (x*multiplier), 0, ImageUtils.negativePixel(image.getRGB((int) ((x + selection.x)*multiplier), (int)(selection.y * multiplier))));
+                rect.setRGB((int) (x*multiplier), (int) ((selection.height - 1)*multiplier), ImageUtils.negativePixel(image.getRGB((int) ((x + selection.x) * multiplier), (int) ((selection.height - 1 + selection.y) * multiplier))));
+            }
+            for (int y = 0; y < selection.height; ++y) {
+                rect.setRGB(0, (int) (y*multiplier), ImageUtils.negativePixel(image.getRGB((int) (selection.x * multiplier), (int) ((selection.y + y) * multiplier))));
+                rect.setRGB((int) ((selection.width - 1)*multiplier), (int) (y*multiplier), ImageUtils.negativePixel(image.getRGB((int) ((selection.width - 1 + selection.x) * multiplier), (int) ((selection.y + y)*multiplier))));
+            }
+            graphics.drawImage(rect, (int)(selection.x * multiplier), (int) (selection.y * multiplier), null);
+
+//            Graphics2D g2d = (Graphics2D) graphics;
+//            Stroke dashed = new BasicStroke(1, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{5, 3, 2, 3}, 0);
+//            g2d.setStroke(dashed);
+//            g2d.drawRect((int) (selection.x * multiplier), (int) (selection.y * multiplier), (int) (selection.width * multiplier), (int) (selection.height * multiplier));
         }
     }
 

@@ -13,15 +13,16 @@ import java.awt.image.BufferedImage;
 import java.util.HashSet;
 import java.util.Set;
 
-public class FilteredImage extends ImagePanel implements FilteredImageObservable, ImageObserver{
+public class FilteredImage extends ImagePanel implements FilteredImageObservable, ImageObserver {
     private SelectedImage selectedImage;
-    private Set<FilteredImageObserver>  filteredImageObservers  = new HashSet<>();
+    private Set<FilteredImageObserver> filteredImageObservers = new HashSet<>();
     private Filter filter;
     private Thread updater;
     private boolean updated = false;
     private BufferedImage tmpImage = null;
     private final Object update = new Object();
     private boolean autoUpdate = true;
+
     public FilteredImage(SelectedImage selectedImage) {
         this.selectedImage = selectedImage;
         selectedImage.addImageObserver(this);
@@ -33,7 +34,7 @@ public class FilteredImage extends ImagePanel implements FilteredImageObservable
         updater = new Thread(() -> {
             try {
                 //noinspection InfiniteLoopStatement
-                while(true) {
+                while (true) {
                     try {
                         BufferedImage image;
                         synchronized (update) {

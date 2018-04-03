@@ -11,8 +11,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class FilterMenuItem extends ImageObserverMenuItem implements ActionListener {
-    private Component parent;
-    private FilterOptionsDialog dialog;
+    protected Component parent;
+    protected FilterOptionsDialog dialog;
 
     public FilterMenuItem(Component parent, Filter filter, SelectedImage selectedImage, FilteredImage filteredImage) {
         super(filter.getName(), selectedImage);

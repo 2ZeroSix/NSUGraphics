@@ -15,7 +15,7 @@ public interface Filter {
     String getName();
     void apply(BufferedImage image);
 
-    void notifyOption(String name);
+    void notifyOption(String name, Object value);
     void addFilterObserver(FilterObserver observer);
     void removeFilterObserver(FilterObserver observer);
 }

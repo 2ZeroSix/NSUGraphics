@@ -43,7 +43,7 @@ public abstract class AbstractFilter implements Filter {
         FilterOption option = options.get(name);
         if (option != null) {
             option.setValue(value);
-            notifyOption(name);
+            notifyOption(name, value);
         } else {
             throw new IllegalArgumentException("No such option: " + name);
         }
@@ -84,14 +84,17 @@ public abstract class AbstractFilter implements Filter {
     Set<FilterObserver> observers = new HashSet<>();
 
     @Override
-    public void notifyOption(String name) {
+    public void notifyOption(String name, Object value) {
         for (FilterObserver observer : observers)
-            observer.updateOption(name);
+            observer.updateOption(name, value);
     }
 
     @Override
     public void addFilterObserver(FilterObserver observer) {
         observers.add(observer);
+        for (Map.Entry<String, FilterOption<?>> option : options.entrySet()) {
+            observer.updateOption(option.getKey(), option.getValue().getValue());
+        }
     }
 
     @Override

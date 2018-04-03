@@ -14,8 +14,8 @@ import java.awt.event.ActionListener;
 import java.util.Objects;
 
 public class FilterButton extends ImageObserverButton implements ActionListener {
-    private final Component parent;
-    private final FilterOptionsDialog dialog;
+    protected final Component parent;
+    protected final FilterOptionsDialog dialog;
 
     public FilterButton(Component parent, Filter filter, FilteredImage filteredImage) {
         super(filter.getName(), filteredImage.getSelectedImage(), filteredImage);

@@ -1,7 +1,9 @@
 package ru.nsu.ccfit.lukin.view;
 
+import javafx.stage.FileChooser;
 import ru.nsu.ccfit.lukin.model.ImageUtils;
 import ru.nsu.ccfit.lukin.model.filters.*;
+import ru.nsu.ccfit.lukin.model.filters.options.FilterOption;
 import ru.nsu.ccfit.lukin.model.observables.FilteredImageObservable;
 import ru.nsu.ccfit.lukin.model.observables.FullImageObservable;
 import ru.nsu.ccfit.lukin.model.observables.ImageObservable;
@@ -10,11 +12,15 @@ import ru.nsu.ccfit.lukin.view.buttons.ImageObserverButton;
 import ru.nsu.ccfit.lukin.view.imagePanels.FilteredImage;
 import ru.nsu.ccfit.lukin.view.imagePanels.FullImage;
 import ru.nsu.ccfit.lukin.view.imagePanels.SelectedImage;
+import ru.nsu.ccfit.lukin.view.imagePanels.VolumeConfigurationChart;
 import ru.nsu.ccfit.lukin.view.menuItems.FilterMenuItem;
 import ru.nsu.ccfit.lukin.view.menuItems.ImageObserverMenuItem;
+import ru.nsu.ccfit.lukin.view.observers.FilterObserver;
+import ru.nsu.ccfit.lukin.view.observers.ImageObserver;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.filechooser.FileView;
 import java.awt.*;
@@ -37,6 +43,7 @@ public class GUI extends ToolBarStatusBarFrame {
     private Map<String, Container> dialogs;
     private ArrayList<Filter> filters;
     private JFileChooser fileChooser = new JFileChooser();
+    private VolumeRenderingFilter volumeRenderingFilter;
 
     public GUI() {
         super("Filter");
@@ -46,8 +53,8 @@ public class GUI extends ToolBarStatusBarFrame {
 
     private void init() {
         initWindow();
-        initWorkspace();
         initAdditionalFrames();
+        initWorkspace();
         initMenuBar();
         initToolBarItems();
     }
@@ -69,13 +76,13 @@ public class GUI extends ToolBarStatusBarFrame {
             JMenu file = new JMenu("File");
             {
                 JMenuItem newDocument = new JMenuItem("new document");
-                newDocument.addActionListener(actionEvent -> fullImage.setImage(null));
+                newDocument.addActionListener(actionEvent -> newFile());
                 file.add(newDocument);
 
                 JMenuItem save = new ImageObserverMenuItem("save file", filteredImage) {
                     @Override
                     public void updateImage(ImageObservable observable) {
-                        setEnabled(filteredImage.getImage()  != null);
+                        setEnabled(filteredImage.getImage() != null);
                         super.updateImage(observable);
                     }
                 };
@@ -109,14 +116,58 @@ public class GUI extends ToolBarStatusBarFrame {
             for (Filter filter : filters) {
                 edit.add(new FilterMenuItem(this, filter, selectedImage, filteredImage));
             }
+            edit.add(new FilterMenuItem(this, volumeRenderingFilter, selectedImage, filteredImage) {
+                private boolean optionsReady = false;
+
+                @Override
+                public void updateImage(ImageObservable observable) {
+                    try {
+                        setEnabled(optionsReady && this.dialog.getFilteredImage().getSelectedImage().getImage() != null);
+                    } catch (NullPointerException e) {
+                        setEnabled(false);
+                    }
+                }
+
+                @Override
+                public void updateOption(String name, Object value) {
+                    optionsReady = true;
+                    for (FilterOption<?> option : this.dialog.getFilter().getOptions().values()) {
+                        if (option.getValue() == null) optionsReady = false;
+                    }
+                    updateImage(this.dialog.getFilteredImage());
+                }
+            });
+            ImageObserverMenuItem loadConfiguration = new ImageObserverMenuItem("load VR configuration");
+            loadConfiguration.addActionListener(ae -> loadConfig());
+            edit.add(loadConfiguration);
+            ImageObserverMenuItem emission = new ImageObserverMenuItem("emission") {
+                @Override
+                public void updateOption(String name, Object value) {
+                    if (name.equals("emission")) {
+                        this.setSelected((Boolean) value);
+                    }
+                }
+            };
+            volumeRenderingFilter.addFilterObserver(emission);
+            emission.addActionListener(ae -> volumeRenderingFilter.setOption("emission", !(Boolean) volumeRenderingFilter.getOption("emission").getValue()));
+            edit.add(emission);
+            ImageObserverMenuItem absorption = new ImageObserverMenuItem("absorption") {
+                @Override
+                public void updateOption(String name, Object value) {
+                    if (name.equals("absorption")) {
+                        this.setSelected((Boolean) value);
+                    }
+                }
+            };
+            volumeRenderingFilter.addFilterObserver(absorption);
+            absorption.addActionListener(ae -> volumeRenderingFilter.setOption("absorption", !(Boolean) volumeRenderingFilter.getOption("absorption").getValue()));
+            edit.add(absorption);
             menuBar.add(edit);
 
             JMenu help = new JMenu("Help");
             {
                 JMenuItem about = new JMenuItem("about");
-                about.addActionListener(ae -> {
-                    JOptionPane.showMessageDialog(this, dialogs.get(about.getText()), about.getText(), JOptionPane.PLAIN_MESSAGE);
-                });
+                about.addActionListener(ae -> JOptionPane.showMessageDialog(this, dialogs.get(about.getText()), about.getText(), JOptionPane.PLAIN_MESSAGE));
                 help.add(about);
             }
             menuBar.add(help);
@@ -126,18 +177,10 @@ public class GUI extends ToolBarStatusBarFrame {
 
     protected void initToolBarItems() {
         JToolBar toolBar = getToolBar();
-        JButton about = new JButton("about");
-        about.setToolTipText("about");
-        toolBar.add(about);
-        // TODO add toolbar buttons
 //        * new
         ButtonGroup group = new ButtonGroup();
         ImageObserverButton newFileButton = new ImageObserverButton("new file");
-        newFileButton.addActionListener(ae -> {
-            fullImage.clean();
-            selectedImage.clean();
-            filteredImage.clean();
-        });
+        newFileButton.addActionListener(ae -> newFile());
         toolBar.add(newFileButton);
 //        * open
         ImageObserverButton openFileButton = new ImageObserverButton("open file");
@@ -147,7 +190,7 @@ public class GUI extends ToolBarStatusBarFrame {
         ImageObserverButton saveFileButton = new ImageObserverButton("save file", filteredImage) {
             @Override
             public void updateImage(ImageObservable observable) {
-                setEnabled(filteredImage.getImage()  != null);
+                setEnabled(filteredImage.getImage() != null);
                 super.updateImage(observable);
             }
         };
@@ -181,11 +224,64 @@ public class GUI extends ToolBarStatusBarFrame {
             toolBar.add(button);
             group.add(button);
         }
+        toolBar.addSeparator();
+        {
+            JButton loadConfiguration = new ImageObserverButton("load VR configuration");
+            loadConfiguration.addActionListener(ae -> loadConfig());
+            toolBar.add(loadConfiguration);
+            ImageObserverButton emission = new ImageObserverButton("emission") {
+                @Override
+                public void updateOption(String name, Object value) {
+                    if (name.equals("emission")) {
+                        this.setSelected((Boolean) value);
+                    }
+                }
+            };
+            volumeRenderingFilter.addFilterObserver(emission);
+            emission.addActionListener(ae -> volumeRenderingFilter.setOption("emission", !(Boolean) volumeRenderingFilter.getOption("emission").getValue()));
+            toolBar.add(emission);
+            ImageObserverButton absorption = new ImageObserverButton("absorption") {
+                @Override
+                public void updateOption(String name, Object value) {
+                    if (name.equals("absorption")) {
+                        this.setSelected((Boolean) value);
+                    }
+                }
+            };
+            volumeRenderingFilter.addFilterObserver(absorption);
+            absorption.addActionListener(ae -> volumeRenderingFilter.setOption("absorption", !(Boolean) volumeRenderingFilter.getOption("absorption").getValue()));
+            toolBar.add(absorption);
+            FilterButton volumeRenderingFilterButton = new FilterButton(this, GUI.this.volumeRenderingFilter, filteredImage) {
+                private boolean optionsReady = false;
 
+                @Override
+                public void updateImage(ImageObservable observable) {
+                    try {
+                        setEnabled(optionsReady && this.dialog.getFilteredImage().getSelectedImage().getImage() != null);
+                    } catch (NullPointerException e) {
+                        setEnabled(false);
+                    }
+                }
+
+                @Override
+                public void updateOption(String name, Object value) {
+                    optionsReady = true;
+                    for (FilterOption<?> option : this.dialog.getFilter().getOptions().values()) {
+                        if (option.getValue() == null) optionsReady = false;
+                    }
+                    updateImage(this.dialog.getFilteredImage());
+                }
+            };
+            this.volumeRenderingFilter.addFilterObserver(volumeRenderingFilterButton);
+
+            toolBar.add(volumeRenderingFilterButton);
+            group.add(volumeRenderingFilterButton);
+        }
+        toolBar.addSeparator();
         ImageObserverButton copyLeftButton = new ImageObserverButton("copy left", selectedImage, filteredImage) {
             @Override
             public void updateImage(ImageObservable observable) {
-                setEnabled(filteredImage.getImage()  != null);
+                setEnabled(filteredImage.getImage() != null);
                 super.updateImage(observable);
             }
         };
@@ -194,6 +290,11 @@ public class GUI extends ToolBarStatusBarFrame {
             filteredImage.setFilter(null);
         });
         toolBar.add(copyLeftButton);
+        toolBar.addSeparator();
+        JButton about = new ImageObserverButton("about");
+        about.addActionListener(ae -> JOptionPane.showMessageDialog(this, dialogs.get(about.getName()), about.getName(), JOptionPane.PLAIN_MESSAGE));
+        toolBar.add(about);
+
     }
 
     private void initWorkspace() {
@@ -210,6 +311,8 @@ public class GUI extends ToolBarStatusBarFrame {
         add(workSpace, fullImage, 0, 0, 1, 1);
         add(workSpace, selectedImage, 1, 0, 1, 1);
         add(workSpace, filteredImage, 2, 0, 1, 1);
+        VolumeConfigurationChart chart = new VolumeConfigurationChart(volumeRenderingFilter);
+        add(workSpace, chart, 0, 1, 3, 1);
     }
 
     private void initAdditionalFrames() {
@@ -239,6 +342,8 @@ public class GUI extends ToolBarStatusBarFrame {
                     "jpg", "jpeg", "bmp", "png", "svg"));
             fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
             fileChooser.setFileView(new FileView() {
+                FileFilter fileFilter = new FileNameExtensionFilter("images",
+                        "jpg", "jpeg", "bmp", "png", "svg");
                 Map<File, ImageIcon> imageMap = new WeakHashMap<>();
                 private int ICON_SIZE = 20;
                 Image defaultImage;
@@ -255,7 +360,7 @@ public class GUI extends ToolBarStatusBarFrame {
 
                 @Override
                 public Icon getIcon(File f) {
-                    if (f.isDirectory() || !fileChooser.getFileFilter().accept(f))
+                    if (f.isDirectory() || !fileFilter.accept(f))
                         return parent != null ? parent.getIcon(f) : super.getIcon(f);
                     ImageIcon imageIcon = new ImageIcon(defaultImage);
                     Icon icon = imageMap.get(f);
@@ -309,6 +414,7 @@ public class GUI extends ToolBarStatusBarFrame {
             filters.add(new AquaFilter());
             filters.add(new RotateFilter(0.));
             filters.add(new GammaFilter(1.));
+            volumeRenderingFilter = new VolumeRenderingFilter();
         }
     }
 
@@ -341,6 +447,22 @@ public class GUI extends ToolBarStatusBarFrame {
         } else if (retval == JFileChooser.ERROR_OPTION) {
             JOptionPane.showMessageDialog(this, "can't choose this file", "open file error", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    private void loadConfig() {
+        FileFilter old = fileChooser.getFileFilter();
+        fileChooser.setFileFilter(new FileNameExtensionFilter("configuration file", "txt"));
+        int retval = fileChooser.showOpenDialog(this);
+        if (retval == JFileChooser.APPROVE_OPTION) {
+            try {
+                new VRFilterLoader(volumeRenderingFilter).load(fileChooser.getSelectedFile());
+            } catch (IllegalArgumentException e) {
+                JOptionPane.showMessageDialog(this, e.getLocalizedMessage(), "configuration reading error", JOptionPane.ERROR_MESSAGE);
+            }
+        } else if (retval == JFileChooser.ERROR_OPTION) {
+            JOptionPane.showMessageDialog(this, "can't choose this file", "open file error", JOptionPane.ERROR_MESSAGE);
+        }
+        fileChooser.setFileFilter(old);
     }
 
     private void saveFile() {

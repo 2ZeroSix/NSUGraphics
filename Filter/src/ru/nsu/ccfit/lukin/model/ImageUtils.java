@@ -44,4 +44,8 @@ public enum ImageUtils {;
         // Return the buffered image
         return bimage;
     }
+
+    public static int negativePixel(int p) {
+        return (p & 0xFF000000) |  ((255 - ((p >> 16) & 0xFF)) << 16) |  ((255 - ((p >> 8) & 0xFF)) << 8) |  (255 - ((p) & 0xFF));
+    }
 }

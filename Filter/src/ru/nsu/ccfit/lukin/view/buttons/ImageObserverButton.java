@@ -4,6 +4,7 @@ import ru.nsu.ccfit.lukin.model.ImageUtils;
 import ru.nsu.ccfit.lukin.model.observables.FilteredImageObservable;
 import ru.nsu.ccfit.lukin.model.observables.FullImageObservable;
 import ru.nsu.ccfit.lukin.model.observables.ImageObservable;
+import ru.nsu.ccfit.lukin.view.observers.FilterObserver;
 import ru.nsu.ccfit.lukin.view.observers.FilteredImageObserver;
 import ru.nsu.ccfit.lukin.view.observers.FullImageObserver;
 import ru.nsu.ccfit.lukin.view.observers.ImageObserver;
@@ -15,7 +16,7 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.function.Consumer;
 
-public class ImageObserverButton extends JButton implements FullImageObserver, FilteredImageObserver, ImageObserver {
+public class ImageObserverButton extends JButton implements FullImageObserver, FilteredImageObserver, ImageObserver, FilterObserver {
     private static final String[] suffixes = {
             "",
             "-selected",
@@ -49,6 +50,7 @@ public class ImageObserverButton extends JButton implements FullImageObserver, F
             imageObservable.addImageObserver(this);
             updateImage(imageObservable);
         }
+        setName(iconName);
         setToolTipText(iconName);
         for (int i = 0; i < suffixes.length; ++i) {
             for (String extension : extensions) {
@@ -80,5 +82,10 @@ public class ImageObserverButton extends JButton implements FullImageObserver, F
 
     @Override
     public void updateImage(ImageObservable observable) {
+    }
+
+    @Override
+    public void updateOption(String name, Object value) {
+
     }
 }
