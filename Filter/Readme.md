@@ -16,10 +16,11 @@
     * Акварелизация - AquaFilter
     * поворот - RotateFilter
     * гамма - GammaFilter
+    * Объёмная визуализация - VolumeRenderingFilter
 ##### кнопкм toolbar'а:
-* new
-* open
-* save
+* новый документ
+* открыть файл
+* сохраить обработанный документ
 * start/stop select
 * ч/б
 * Негатив
@@ -36,5 +37,8 @@
 * Акварелизация
 * поворот
 * гамма
-* selected -> filtered
+* загрузка конфигурации
+* светимость
+* ослабление
 * selected <- filtered
+* об авторе
