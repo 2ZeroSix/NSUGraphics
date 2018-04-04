@@ -2,6 +2,7 @@ package view;
 
 import actions.IconAction;
 import view.buttons.IconButton;
+import view.panels.IsolinesPanel;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -27,6 +28,7 @@ public class GUI extends ToolBarStatusBarFrame {
     public GUI() {
         super("Isolines");
         initWindow();
+        initWorkspace();
         initActions();
         initMenuBar();
         initToolBarItems();
@@ -42,7 +44,16 @@ public class GUI extends ToolBarStatusBarFrame {
             }
         });
     }
-
+    private void initWorkspace() {
+        getWorkWindow().setLayout(new BorderLayout());
+        JPanel workSpace = new JPanel(new GridBagLayout());
+        JScrollPane scrollPane = new JScrollPane(workSpace,
+                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.getHorizontalScrollBar().setUnitIncrement(10);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(10);
+        add(scrollPane, BorderLayout.CENTER);
+        add(workSpace, new IsolinesPanel(), 0, 0, 1, 1);
+    }
     private void initToolBarItems() {
         JToolBar toolBar = getToolBar();
 
@@ -118,6 +129,5 @@ public class GUI extends ToolBarStatusBarFrame {
         };
     }
 
-    // - (y - 0.5) * abs(sin(3 * arctg((y - 0.5) / (x - 0.51))))
-    // (x - 0.5) * abs(cos(2 * arctg((y - 0.5) / (x - 0.51))))
+
 }
