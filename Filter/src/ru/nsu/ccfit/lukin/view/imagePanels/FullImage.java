@@ -158,6 +158,7 @@ public class FullImage extends ImagePanel implements FullImageObservable, MouseL
     @Override
     public void paint(Graphics graphics) {
         super.paint(graphics);
+        Rectangle selection = new Rectangle(this.selection);
         if (fullSizeImage != null && selectable && selection.width > 0 && selection.height > 0) {
             int w = fullSizeImage.getWidth();
             int h = fullSizeImage.getHeight();
