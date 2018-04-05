@@ -17,18 +17,9 @@ public class IsolinesPanel extends JPanel {
     }
 
     public class Legend extends JPanel {
-        public static final int VERTICAL = 0;
-        public static final int HORIZONTAL = 1;
-        private int orientation;
-
         Legend() {
-            this(VERTICAL);
-        }
-
-        Legend(int orientation) {
-            this.orientation = orientation;
             setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));
-            setPreferredSize(orientation == VERTICAL ? new Dimension(100, 600) : new Dimension(800, 100));
+            setPreferredSize(new Dimension(800, 100));
         }
     }
 
@@ -38,14 +29,14 @@ public class IsolinesPanel extends JPanel {
         Face(Function2x2 func) {
             this.func = func;
             setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));
-//            setPreferredSize(new Dimension(700, 600));
+            setPreferredSize(new Dimension(800, 500));
         }
     }
 
     public IsolinesPanel() {
         super(new GridBagLayout());
         ContainerUtils.add(this, new Face(getDefaultFunction2x2()), 0, 0, 1, 1);
-        ContainerUtils.add(this, new Legend(Legend.HORIZONTAL), 0, 1, 1, 1);
+        ContainerUtils.add(this, new Legend(), 0, 1, 1, 1);
     }
 
     private Function2x2 getDefaultFunction2x2() {

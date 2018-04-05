@@ -14,7 +14,7 @@ import java.io.IOException;
 
 public class GUI extends ToolBarStatusBarFrame {
     private IconAction openFile;
-    private IconAction showValue;
+    private IconAction toggleShowValue;
     private IconAction toggleInterpolation;
     private IconAction toggleGrid;
     private IconAction toggleMap;
@@ -32,6 +32,7 @@ public class GUI extends ToolBarStatusBarFrame {
         initActions();
         initMenuBar();
         initToolBarItems();
+        pack();
     }
 
     private void initWindow() {
@@ -56,9 +57,26 @@ public class GUI extends ToolBarStatusBarFrame {
     }
     private void initToolBarItems() {
         JToolBar toolBar = getToolBar();
+        toolBar.add(new IconButton(openFile));
 
+        toolBar.addSeparator();
+
+        toolBar.add(new IconButton(toggleShowValue));
+        toolBar.add(new IconButton(toggleInterpolation));
+        toolBar.add(new IconButton(toggleGrid));
+        toolBar.add(new IconButton(toggleMap));
+        toolBar.add(new IconButton(toggleIsolines));
+        toolBar.add(new IconButton(toggleHachures));
+        toolBar.add(new IconButton(toggleIsolineControlPoints));
+        toolBar.add(new IconButton(toggleParabolicIsolines));
+
+        toolBar.addSeparator();
 
         toolBar.add(new IconButton(showAbout));
+
+        toolBar.addSeparator();
+
+        toolBar.add(new IconButton(exit));
     }
 
     private void initMenuBar() {
@@ -71,7 +89,7 @@ public class GUI extends ToolBarStatusBarFrame {
         menuBar.add(file);
 
         JMenu edit = new JMenu("Edit");
-        edit.add(showValue);
+        edit.add(toggleShowValue);
         edit.add(toggleInterpolation);
         edit.add(toggleGrid);
         edit.add(toggleMap);
@@ -93,27 +111,31 @@ public class GUI extends ToolBarStatusBarFrame {
     }
 
     private void initActions() {
-
         openFile = new IconAction("open file");
-        showValue = new IconAction("show value");
+        toggleShowValue = new IconAction("show value");
         toggleInterpolation = new IconAction("toggle interpolation");
         toggleGrid = new IconAction("toggle grid");
         toggleMap = new IconAction("toggle map");
-        toggleIsolines = new IconAction("toggle contour line");
+        toggleIsolines = new IconAction("toggle contour lines");
         toggleHachures = new IconAction("toggle hachures");
         toggleIsolineControlPoints = new IconAction("toggle contour line control points");
         toggleParabolicIsolines = new IconAction("toggle parabolic contour lines");
-        showAbout =  new IconAction("about") {
+        showAbout =  new IconAction("about", "show info about author") {
             Container about;
             {
-                about = new Box(BoxLayout.Y_AXIS);
+                about = new JPanel(new GridBagLayout());
+                GridBagConstraints gbc = new GridBagConstraints();
+                gbc.gridy = 0;
                 try {
-                    about.add(new JLabel(new ImageIcon(ImageIO.read(getClass().getResource("/me.png")))));
-                } catch (IllegalArgumentException | IOException e) {
+                    about.add(new JLabel(new ImageIcon(ImageIO.read(getClass().getResource("/me.png")).getScaledInstance(100, 100, Image.SCALE_SMOOTH))), gbc);
+                    gbc.gridy++;
+                } catch (IllegalArgumentException | IOException ignore) {
                 }
-                about.add(new JLabel("Isolines ver. 1.0"));
-                about.add(new JLabel("Bogdan Lukin"));
-                about.add(new JLabel("FIT 15206"));
+                about.add(new JLabel("Isolines ver. 1.0"), gbc);
+                gbc.gridy++;
+                about.add(new JLabel("Bogdan Lukin"), gbc);
+                gbc.gridy++;
+                about.add(new JLabel("FIT 15206"), gbc);
             }
             @Override
             public void actionPerformed(ActionEvent e) {
