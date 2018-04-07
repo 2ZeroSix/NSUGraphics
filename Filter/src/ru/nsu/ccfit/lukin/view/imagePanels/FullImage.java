@@ -164,17 +164,17 @@ public class FullImage extends ImagePanel implements FullImageObservable, MouseL
             int h = fullSizeImage.getHeight();
             double multiplier = 350. / (w > h ? w : h);
             if (multiplier > 1.) multiplier = 1.;
-            BufferedImage image = super.getImage();
-            BufferedImage rect = new BufferedImage(selection.width, selection.height, BufferedImage.TYPE_INT_ARGB);
+            BufferedImage image = getImage();
+            BufferedImage rect = new BufferedImage((int)Math.round(selection.width*multiplier), (int)Math.round(selection.height*multiplier), BufferedImage.TYPE_INT_ARGB);
             for (int x = 0; x < selection.width; ++x) {
-                rect.setRGB((int) (x*multiplier), 0, ImageUtils.negativePixel(image.getRGB((int) ((x + selection.x)*multiplier), (int)(selection.y * multiplier))));
-                rect.setRGB((int) (x*multiplier), (int) ((selection.height - 1)*multiplier), ImageUtils.negativePixel(image.getRGB((int) ((x + selection.x) * multiplier), (int) ((selection.height - 1 + selection.y) * multiplier))));
+                rect.setRGB((int)(x*multiplier), 0, ImageUtils.negativePixel(image.getRGB((x + selection.x), selection.y)));
+                rect.setRGB((int)(x*multiplier), (int)((selection.height - 1)*multiplier), ImageUtils.negativePixel(image.getRGB((x + selection.x), (selection.height - 1 + selection.y))));
             }
             for (int y = 0; y < selection.height; ++y) {
-                rect.setRGB(0, (int) (y*multiplier), ImageUtils.negativePixel(image.getRGB((int) (selection.x * multiplier), (int) ((selection.y + y) * multiplier))));
-                rect.setRGB((int) ((selection.width - 1)*multiplier), (int) (y*multiplier), ImageUtils.negativePixel(image.getRGB((int) ((selection.width - 1 + selection.x) * multiplier), (int) ((selection.y + y)*multiplier))));
+                rect.setRGB(0, (int)(y*multiplier), ImageUtils.negativePixel(image.getRGB(selection.x, (selection.y + y))));
+                rect.setRGB((int)((selection.width - 1)*multiplier), (int)(y*multiplier), ImageUtils.negativePixel(image.getRGB((selection.width - 1 + selection.x), (selection.y + y))));
             }
-            graphics.drawImage(rect, (int)((selection.x + 1) * multiplier), (int) ((selection.y + 1) * multiplier), null);
+            graphics.drawImage(rect, (int)Math.round((selection.x) * multiplier), (int)Math.round ((selection.y) * multiplier), null);
 
 //            Graphics2D g2d = (Graphics2D) graphics;
 //            Stroke dashed = new BasicStroke(1, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{5, 3, 2, 3}, 0);
