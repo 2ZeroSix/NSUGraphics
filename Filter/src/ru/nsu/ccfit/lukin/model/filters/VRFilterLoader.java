@@ -16,6 +16,7 @@ public class VRFilterLoader {
 
     public void load(File file) {
         try (Scanner scanner = new Scanner(file)){
+            scanner.useLocale(Locale.US);
             scanner.useDelimiter("(([\\v\\h])|([\\v\\h]*(//.*[\\v])[\\v\\h]*))+");
             int absorptionCount = scanner.nextInt();
             AbstractMap.SimpleEntry<Integer, Double>[] absorption = new AbstractMap.SimpleEntry[absorptionCount];
