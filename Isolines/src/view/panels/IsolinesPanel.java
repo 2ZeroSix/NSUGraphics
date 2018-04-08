@@ -10,6 +10,7 @@ import java.awt.geom.Rectangle2D;
 public class IsolinesPanel extends JPanel {
     private Legend legend;
     private Face face;
+    private Function2x2 func;
     public interface Function2x2 {
         Rectangle.Double getBounds();
         double calcX(double x, double y);
@@ -26,20 +27,25 @@ public class IsolinesPanel extends JPanel {
     public class Face extends JPanel {
         private Function2x2 func;
 
-        Face(Function2x2 func) {
-            this.func = func;
+        Face() {
             setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));
             setPreferredSize(new Dimension(800, 500));
         }
     }
-
     public IsolinesPanel() {
-        super(new GridBagLayout());
-        ContainerUtils.add(this, new Face(getDefaultFunction2x2()), 0, 0, 1, 1);
-        ContainerUtils.add(this, new Legend(), 0, 1, 1, 1);
+        this(getDefaultFunction2x2());
     }
 
-    private Function2x2 getDefaultFunction2x2() {
+    public IsolinesPanel(Function2x2 func) {
+        super(new GridBagLayout());
+        this.func = func;
+        face = new Face();
+        legend = new Legend();
+        ContainerUtils.add(this, face, 0, 0, 1, 1);
+        ContainerUtils.add(this, legend, 0, 1, 1, 1);
+    }
+
+    private static Function2x2 getDefaultFunction2x2() {
         return new Function2x2() {
             @Override
             public Rectangle.Double getBounds() {
