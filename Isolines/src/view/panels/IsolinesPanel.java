@@ -1,20 +1,32 @@
 package view.panels;
 
+import model.Function2x2;
+import model.IsolineModel;
+import model.observers.IsolineModelObserver;
 import view.ContainerUtils;
 
 import javax.swing.*;
 import javax.swing.border.BevelBorder;
 import java.awt.*;
-import java.awt.geom.Rectangle2D;
+import java.util.List;
 
-public class IsolinesPanel extends JPanel {
+public class IsolinesPanel extends JPanel implements IsolineModelObserver {
     private Legend legend;
     private Face face;
-    private Function2x2 func;
-    public interface Function2x2 {
-        Rectangle.Double getBounds();
-        double calcX(double x, double y);
-        double calcY(double x, double y);
+
+    @Override
+    public void update(Function2x2 function2x2) {
+
+    }
+
+    @Override
+    public void update(IsolineModel.Parameters parameters) {
+
+    }
+
+    @Override
+    public void update(IsolineModel isolineModel) {
+
     }
 
     public class Legend extends JPanel {
@@ -36,20 +48,21 @@ public class IsolinesPanel extends JPanel {
         this(getDefaultFunction2x2());
     }
 
-    public IsolinesPanel(Function2x2 func) {
+    public IsolinesPanel(Function2x2 function) {
         super(new GridBagLayout());
-        this.func = func;
         face = new Face();
         legend = new Legend();
         ContainerUtils.add(this, face, 0, 0, 1, 1);
         ContainerUtils.add(this, legend, 0, 1, 1, 1);
     }
 
+
+
     private static Function2x2 getDefaultFunction2x2() {
         return new Function2x2() {
             @Override
             public Rectangle.Double getBounds() {
-                return new Rectangle2D.Double(0, 0, .5, .5);
+                return new Rectangle.Double(0, 0, .5, .5);
             }
 
             @Override
