@@ -3,19 +3,28 @@ package model;
 import model.observers.IsolineModelObserver;
 
 import java.awt.*;
+import java.util.BitSet;
 import java.util.List;
+import java.util.Set;
 
 public interface IsolineModel {
-    Parameters getParameters();
-    Function2x2 getFunction();
-
-    class Parameters {
-        private int keyValuesCount;
-        private List<Color> colors;
-    }
+    boolean isInterpolating();
+    boolean isClicking();
+    boolean isPlot();
+    boolean isIsolines();
+    boolean isGrid();
+    Dimension getGridSize();
+    boolean isGridDots();
+    boolean isShowValue();
+    List<Color> getColors();
+    Color getIsolineColor();
+    FunctionZ getFunction();
+    List<Double> getKeyValues();
+    Point.Double getCursor();
 
     void addObserver(IsolineModelObserver observer);
     void removeObserver(IsolineModelObserver observer);
-    void notifyFunction(IsolineModel isolineModel);
-    void notifyParameters(IsolineModel isolineModel);
+    void notifyObservers();
+
+    Set<Double> getUserIsolines();
 }

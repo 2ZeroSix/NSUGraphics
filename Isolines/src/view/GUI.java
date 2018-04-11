@@ -1,6 +1,10 @@
 package view;
 
 import actions.IconAction;
+import actions.IsolineAction;
+import model.IsolineModel;
+import model.IsolineModelImpl;
+import model.MutableIsolineModel;
 import view.buttons.IconButton;
 import view.panels.IsolinesPanel;
 
@@ -13,23 +17,118 @@ import java.awt.event.WindowEvent;
 import java.io.IOException;
 
 public class GUI extends ToolBarStatusBarFrame {
-    private IconAction openFile;
-    private IconAction toggleShowValue;
-    private IconAction toggleInterpolation;
-    private IconAction toggleGrid;
-    private IconAction toggleMap;
-    private IconAction toggleIsolines;
-    private IconAction toggleHachures;
-    private IconAction toggleIsolineControlPoints;
-    private IconAction toggleParabolicIsolines;
-    private IconAction showAbout;
-    private IconAction exit;
+    private MutableIsolineModel model = new IsolineModelImpl();
+    private IconAction openFile = new IconAction("open file");
+    private IsolineAction toggleShowValue = new IsolineAction("show value", model) {
+        @Override
+        public void update(IsolineModel isolineModel) {
+            putValue(Action.SELECTED_KEY, model.isShowValue());
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            model.setShowValue(!model.isShowValue());
+        }
+    };
+    private IsolineAction toggleInterpolation = new IsolineAction("interpolation", model) {
+        @Override
+        public void update(IsolineModel isolineModel) {
+            putValue(Action.SELECTED_KEY, model.isInterpolating());
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            model.setInterpolating(!model.isInterpolating());
+        }
+    };
+    private IsolineAction toggleGrid = new IsolineAction("grid", model) {
+        @Override
+        public void update(IsolineModel isolineModel) {
+            putValue(Action.SELECTED_KEY, model.isGrid());
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            model.setGrid(!model.isGrid());
+        }
+    };
+    private IsolineAction toggleMap = new IsolineAction("map", model) {
+        @Override
+        public void update(IsolineModel isolineModel) {
+            putValue(Action.SELECTED_KEY, model.isPlot());
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            model.setPlot(!model.isPlot());
+        }
+    };
+    private IsolineAction toggleIsolines = new IsolineAction("contour lines", model) {
+        @Override
+        public void update(IsolineModel isolineModel) {
+            putValue(Action.SELECTED_KEY, model.isIsolines());
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            model.setIsolines(!model.isIsolines());
+        }
+    };
+    private IsolineAction toggleIsolinesOnClick = new IsolineAction("clicking", model) {
+        @Override
+        public void update(IsolineModel isolineModel) {
+            putValue(Action.SELECTED_KEY, model.isClicking());
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            model.setClicking(!model.isClicking());
+        }
+    };
+    private IsolineAction toggleIsolineControlPoints = new IsolineAction("control points", model) {
+        @Override
+        public void update(IsolineModel isolineModel) {
+            putValue(Action.SELECTED_KEY, model.isGridDots());
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            model.setGridDots(!model.isGridDots());
+        }
+    };
+    private IconAction showAbout = new IconAction("about", "show info about author") {
+        Container about;
+        {
+            about = new JPanel(new GridBagLayout());
+            GridBagConstraints gbc = new GridBagConstraints();
+            gbc.gridy = 0;
+            try {
+                about.add(new JLabel(new ImageIcon(ImageIO.read(getClass().getResource("/me.png")).getScaledInstance(100, 100, Image.SCALE_SMOOTH))), gbc);
+                gbc.gridy++;
+            } catch (IllegalArgumentException | IOException ignore) {
+            }
+            about.add(new JLabel("Isolines ver. 1.0"), gbc);
+            gbc.gridy++;
+            about.add(new JLabel("Bogdan Lukin"), gbc);
+            gbc.gridy++;
+            about.add(new JLabel("FIT 15206"), gbc);
+        }
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            JOptionPane.showMessageDialog(GUI.this, about, "About", JOptionPane.PLAIN_MESSAGE);
+        }
+    };
+    private IconAction exit = new IconAction("exit") {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            dispose();
+        }
+    };
 
     public GUI() {
         super("Isolines");
         initWindow();
         initWorkspace();
-        initActions();
         initMenuBar();
         initToolBarItems();
         pack();
@@ -53,7 +152,7 @@ public class GUI extends ToolBarStatusBarFrame {
         scrollPane.getHorizontalScrollBar().setUnitIncrement(10);
         scrollPane.getVerticalScrollBar().setUnitIncrement(10);
         add(scrollPane, BorderLayout.CENTER);
-        add(workSpace, new IsolinesPanel(), 0, 0, 1, 1);
+        add(workSpace, new IsolinesPanel(model), 0, 0, 1, 1);
     }
     private void initToolBarItems() {
         JToolBar toolBar = getToolBar();
@@ -66,9 +165,8 @@ public class GUI extends ToolBarStatusBarFrame {
         toolBar.add(new IconButton(toggleGrid));
         toolBar.add(new IconButton(toggleMap));
         toolBar.add(new IconButton(toggleIsolines));
-        toolBar.add(new IconButton(toggleHachures));
+        toolBar.add(new IconButton(toggleIsolinesOnClick));
         toolBar.add(new IconButton(toggleIsolineControlPoints));
-        toolBar.add(new IconButton(toggleParabolicIsolines));
 
         toolBar.addSeparator();
 
@@ -94,9 +192,8 @@ public class GUI extends ToolBarStatusBarFrame {
         edit.add(toggleGrid);
         edit.add(toggleMap);
         edit.add(toggleIsolines);
-        edit.add(toggleHachures);
+        edit.add(toggleIsolinesOnClick);
         edit.add(toggleIsolineControlPoints);
-        edit.add(toggleParabolicIsolines);
 
         menuBar.add(edit);
 
@@ -109,47 +206,5 @@ public class GUI extends ToolBarStatusBarFrame {
 
         setJMenuBar(menuBar);
     }
-
-    private void initActions() {
-        openFile = new IconAction("open file");
-        toggleShowValue = new IconAction("show value");
-        toggleInterpolation = new IconAction("toggle interpolation");
-        toggleGrid = new IconAction("toggle grid");
-        toggleMap = new IconAction("toggle map");
-        toggleIsolines = new IconAction("toggle contour lines");
-        toggleHachures = new IconAction("toggle hachures");
-        toggleIsolineControlPoints = new IconAction("toggle contour line control points");
-        toggleParabolicIsolines = new IconAction("toggle parabolic contour lines");
-        showAbout =  new IconAction("about", "show info about author") {
-            Container about;
-            {
-                about = new JPanel(new GridBagLayout());
-                GridBagConstraints gbc = new GridBagConstraints();
-                gbc.gridy = 0;
-                try {
-                    about.add(new JLabel(new ImageIcon(ImageIO.read(getClass().getResource("/me.png")).getScaledInstance(100, 100, Image.SCALE_SMOOTH))), gbc);
-                    gbc.gridy++;
-                } catch (IllegalArgumentException | IOException ignore) {
-                }
-                about.add(new JLabel("Isolines ver. 1.0"), gbc);
-                gbc.gridy++;
-                about.add(new JLabel("Bogdan Lukin"), gbc);
-                gbc.gridy++;
-                about.add(new JLabel("FIT 15206"), gbc);
-            }
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                JOptionPane.showMessageDialog(GUI.this, about, "About", JOptionPane.PLAIN_MESSAGE);
-            }
-        };
-
-        exit = new IconAction("exit") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                dispose();
-            }
-        };
-    }
-
 
 }
