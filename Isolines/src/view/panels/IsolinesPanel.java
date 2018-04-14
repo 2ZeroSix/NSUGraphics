@@ -25,15 +25,16 @@ public class IsolinesPanel extends JPanel implements IsolineModelObserver {
 
     class FunctionMap extends BufferedImage {
         private FunctionZ function;
-        private final int w;
-        private final int h;
+        private int w;
+        private int h;
 
         FunctionMap(FunctionZ function, Dimension size) {
             super(size.width, size.height, BufferedImage.TYPE_INT_ARGB);
             this.function = function;
-            w = size.width;
-            h = size.height;
+            this.w = size.width;
+            this.h = size.height;
         }
+
 
         void drawMap() {
             double xStep = (function.getBounds().width) / w;
@@ -193,7 +194,6 @@ public class IsolinesPanel extends JPanel implements IsolineModelObserver {
 
         java.util.AbstractMap.SimpleEntry<Point, Point>[] handleCell(AbstractMap.SimpleEntry<Point, Double>[] vertices,
                                                                    double value, double middle_value) {
-            AbstractMap.SimpleEntry<Point, Point> isolines;
             int bigger = 0;
             for (AbstractMap.SimpleEntry<Point, Double> vertice : vertices) {
                 if (vertice.getValue() > value) {
@@ -211,6 +211,19 @@ public class IsolinesPanel extends JPanel implements IsolineModelObserver {
             }
             return new AbstractMap.SimpleEntry[0];
         }
+
+        void drawGrid() {} {
+            Graphics2D g2 = createGraphics();
+            g2.setColor(Color.BLACK);
+            for (int x = 0; x < model.getGridSize().width; ++x) {
+                g2.drawLine(w * x / model.getGridSize().width,0, w * x / model.getGridSize().width,h - 1);
+            }
+            for (int y = 0; y < model.getGridSize().height; ++y) {
+                g2.drawLine(0, h * y / model.getGridSize().height,w-1, h * y / model.getGridSize().height);
+            }
+            g2.dispose();
+        }
+
         void drawIsolines() {
             Color color = model.getIsolineColor();
             int horizontal_cells = model.getGridSize().width;
@@ -342,6 +355,9 @@ public class IsolinesPanel extends JPanel implements IsolineModelObserver {
             FunctionMap map = new FunctionMap(model.getFunction(), getPreferredSize());
             if (model.isPlot()) {
                 map.drawMap();
+            }
+            if (model.isGrid()) {
+                map.drawGrid();
             }
             if (model.isIsolines()) {
                 map.drawIsolines();
