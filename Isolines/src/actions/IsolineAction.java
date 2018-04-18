@@ -1,9 +1,11 @@
 package actions;
 
 import model.IsolineModel;
-import model.observers.IsolineModelObserver;
 
-public class IsolineAction extends IconAction implements IsolineModelObserver {
+import java.util.Observable;
+import java.util.Observer;
+
+public class IsolineAction extends IconAction implements Observer {
     public IsolineAction(String name, IsolineModel model) {
         this(name, name, model);
     }
@@ -14,7 +16,7 @@ public class IsolineAction extends IconAction implements IsolineModelObserver {
     }
 
     @Override
-    public void update(IsolineModel isolineModel) {
+    public void update(Observable o, Object arg) {
 
     }
 }

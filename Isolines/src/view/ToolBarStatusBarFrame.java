@@ -99,7 +99,7 @@ public class ToolBarStatusBarFrame extends JFrame implements MouseListener, Cont
         statusBar.add(statusLabel);
     }
 
-    private void setStatus(String status) {
+    public void setStatus(String status) {
         if (!Objects.equals(status, statusLabel.getText())) {
             this.statusLabel.setText(status);
             this.statusLabel.repaint();

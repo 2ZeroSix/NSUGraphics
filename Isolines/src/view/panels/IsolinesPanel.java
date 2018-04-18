@@ -1,35 +1,40 @@
 package view.panels;
 
 import model.FunctionZ;
-import model.IsolineModel;
 import model.MutableIsolineModel;
-import model.observers.IsolineModelObserver;
 import view.ContainerUtils;
 
 import javax.swing.*;
 import javax.swing.border.BevelBorder;
 import java.awt.*;
-import java.awt.geom.Point2D;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
+import java.lang.reflect.Array;
 import java.util.*;
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.stream.DoubleStream;
+import java.util.stream.Stream;
 
-public class IsolinesPanel extends JPanel implements IsolineModelObserver {
+public class IsolinesPanel extends JPanel {
     private Legend legend;
     private Face face;
     private MutableIsolineModel model;
+    private Consumer<String> setStatus;
 
-    @Override
-    public void update(IsolineModel isolineModel) {
 
-    }
-
-    class FunctionMap extends BufferedImage {
-        private FunctionZ function;
-        private int w;
-        private int h;
+    class FunctionMap {
+        private final FunctionZ function;
+        private final int w;
+        private final int h;
+        private final BufferedImage image;
+        private int radius = 5;
 
         FunctionMap(FunctionZ function, Dimension size) {
-            super(size.width, size.height, BufferedImage.TYPE_INT_ARGB);
+            image = new BufferedImage(size.width, size.height, BufferedImage.TYPE_INT_ARGB);
             this.function = function;
             this.w = size.width;
             this.h = size.height;
@@ -37,21 +42,17 @@ public class IsolinesPanel extends JPanel implements IsolineModelObserver {
 
 
         void drawMap() {
-            double xStep = (function.getBounds().width) / w;
-            double yStep = (function.getBounds().height) / h;
-            double step = ((function.getMax() - function.getMin()) / (model.getKeyValues().size() + 1));
+            double step = function.getRange() / (model.getKeyValues() + 1);
             for (int j = 0; j < h; ++j) {
                 for (int i = 0; i < w; ++i) {
-                    double x = (i) * xStep;
-                    double y = (j) * yStep;
-                    double val = function.calc(x, y);
-                    int level_index = Integer.min((int) ((val - function.getMin()) / step), model.getKeyValues().size());
+                    double val = function.calc(function.cast(i, j, new Dimension(w, h)));
+                    int level_index = Integer.max(Integer.min((int) ((val - function.getMin()) / step), model.getKeyValues()), 0);
                     Color color = model.getColors().get(level_index);
                     if (model.isInterpolating()) {
                         double rel = val - function.getMin() - level_index * step;
-                        int sign = (rel > step / 2) ? 1 : -1;
+                        int sign = (rel - step / 2 > 0) ? 1 : -1;
                         int neighbor_index = level_index + sign;
-                        if (!(neighbor_index < 0 || neighbor_index > model.getKeyValues().size())) {
+                        if (!(neighbor_index < 0 || neighbor_index > model.getKeyValues())) {
                             Color neighbor_color = model.getColors().get(neighbor_index);
                             double factor_neighbor;
                             double factor_this;
@@ -68,313 +69,398 @@ public class IsolinesPanel extends JPanel implements IsolineModelObserver {
                             color = new Color(r, g, b);
                         }
                     }
-                    setRGB(i, (h - 1 - j), color.getRGB());
+                    image.setRGB(i, j, color.getRGB());
                 }
             }
         }
-        AbstractMap.SimpleEntry[] handleCell1(AbstractMap.SimpleEntry<Point, Double>[] vertices,
-                                              double value,
-                                              int bigger) {
-            Comparator<AbstractMap.SimpleEntry<Point, Double>> comp = bigger == 1 ?
-                    Comparator.comparingDouble(java.util.AbstractMap.SimpleEntry::getValue):
-            (a,b) -> (int) (b.getValue() - a.getValue());
 
-            Arrays.sort(vertices, comp);
-            AbstractMap.SimpleEntry<Point, Double> point = vertices[0];
 
-            Point start = new Point(point.getKey().x, 0);
-            Point end = new Point(0, point.getKey().y);
-
-            for (AbstractMap.SimpleEntry<Point, Double> vertice : vertices) {
-                if (point.getKey().x == vertice.getKey().x) {
-                    int offset = point.getValue() > vertice.getValue() ? point.getKey().y : vertice.getKey().y;
-                    int sign = offset == Integer.max(point.getKey().y, vertice.getKey().y) ? -1 : 1;
-                    start.y = (int) (sign
-                                                * Math.abs(value - Math.max(point.getValue(), vertice.getValue()))
-                                                * Math.abs(point.getKey().y - vertice.getKey().y) / Math.abs(point.getValue() - vertice.getValue())
-                                                + offset);
-                }
-                if (point.getKey().y == vertice.getKey().y) {
-                    int offset = point.getValue() > vertice.getValue() ? point.getKey().x : vertice.getKey().x;
-                    int sign = offset == Math.max(point.getKey().x, vertice.getKey().x) ? -1 : 1;
-                    end.x = (int) (sign * Math.abs(value - Math.max(point.getValue(), vertice.getValue())) * Math.abs(point.getKey().x - vertice.getKey().x) / Math.abs(point.getValue() - vertice.getValue())
-                                                + offset);
-                }
-            }
-            return new AbstractMap.SimpleEntry[]{new AbstractMap.SimpleEntry<Point, Point>(start, end)};
-        }
-
-        java.util.AbstractMap.SimpleEntry[] handleCell2(AbstractMap.SimpleEntry<Point, Double>[] vertices,
-                                                        double value,
-                                                        double middle_value) {
-            Arrays.sort(vertices, Comparator.comparingDouble(AbstractMap.SimpleEntry::getValue));
-
-            java.util.AbstractMap.SimpleEntry<Point, Double> p1 = vertices[0];
-            java.util.AbstractMap.SimpleEntry<Point, Double> p2 = vertices[1];
-            java.util.AbstractMap.SimpleEntry<Point, Double> p3 = vertices[2];
-            java.util.AbstractMap.SimpleEntry<Point, Double> p4 = vertices[3];
-            if (p1.getKey().x == p2.getKey().x) {
-                Point start = new Point(0, p1.getKey().y);
-                Point end = new Point(0, p2.getKey().y);
-                if (p1.getKey().y != p3.getKey().y) {
-                    java.util.AbstractMap.SimpleEntry<Point, Double> tmp = p3;
-                    p3 = p4;
-                    p4 = tmp;
-                }
-                int offset = p1.getKey().x;
-                int sign = offset == Math.max(p1.getKey().x, p3.getKey().x) ? -1 : 1;
-                start.x = (int) (offset + sign * Math.abs(value - p1.getValue()) * Math.abs(p1.getKey().x - p3.getKey().x) / Math.abs(p1.getValue() - p3.getValue()));
-                offset = p2.getKey().x;
-                sign = offset == Math.max(p2.getKey().x, p4.getKey().x) ? -1 : 1;
-                end.x = (int) (offset + sign * Math.abs(value - p2.getValue()) * Math.abs(p2.getKey().x - p4.getKey().x) / Math.abs(p2.getValue() - p4.getValue()));
-                return new AbstractMap.SimpleEntry[]{new AbstractMap.SimpleEntry<Point, Point>(start, end)};
-            } else if (p1.getKey().y == p2.getKey().y) {
-                Point start = new Point(p1.getKey().x, 0);
-                Point end = new Point(p2.getKey().x, 0);
-                if (p1.getKey().x != p3.getKey().x) {
-                    java.util.AbstractMap.SimpleEntry<Point, Double> tmp = p3;
-                    p3 = p4;
-                    p4 = tmp;
-                }
-                int offset = p1.getKey().y;
-                int sign = offset == Math.max(p1.getKey().y, p3.getKey().y) ? -1 : 1;
-                start.y = (int) (offset + sign * Math.abs(value - p1.getValue()) * Math.abs(p1.getKey().y - p3.getKey().y) / Math.abs(p1.getValue() - p3.getValue()));
-                offset = p2.getKey().y;
-                sign = offset == Math.max(p2.getKey().y, p4.getKey().y) ? -1 : 1;
-                end.y = (int) (offset + sign * Math.abs(value - p2.getValue()) * Math.abs(p2.getKey().y - p4.getKey().y) / Math.abs(p2.getValue() - p4.getValue()));
-                return new AbstractMap.SimpleEntry[]{new AbstractMap.SimpleEntry<Point, Point>(start, end)};
-            } else if (middle_value > value){
-                Point start1 = new Point(p1.getKey().x, 0);
-                Point end1 = new Point(0, p2.getKey().y);
-                Point start2 = new Point(p2.getKey().x, 0);
-                Point end2 = new Point(0, p1.getKey().y);
-                if (p1.getKey().x != p3.getKey().x) {
-                    java.util.AbstractMap.SimpleEntry<Point, Double> tmp = p3;
-                    p3 = p4;
-                    p4 = tmp;
-                }
-                int offset = p2.getKey().x;
-                int sign = offset == Math.max(p2.getKey().x, p3.getKey().x) ? -1 : 1;
-                end1.x = (int) (offset + sign * Math.abs(value - p2.getValue()) * Math.abs(p2.getKey().x - p3.getKey().x) / Math.abs(p2.getValue() - p3.getValue()));
-                offset = p1.getKey().y;
-                sign = offset == Math.max(p1.getKey().y, p3.getKey().y) ? -1 : 1;
-                start1.y = (int) (offset + sign * Math.abs(value - p1.getValue()) * Math.abs(p1.getKey().y - p3.getKey().y) / Math.abs(p1.getValue() - p3.getValue()));
-                offset = p1.getKey().x;
-                sign = offset == Math.max(p1.getKey().x, p4.getKey().x) ? -1 : 1;
-                end2.x = (int) (offset + sign * Math.abs(value - p1.getValue()) * Math.abs(p4.getKey().x - p1.getKey().x) / Math.abs(p1.getValue() - p4.getValue()));
-                offset = p2.getKey().y;
-                sign = offset == Math.max(p2.getKey().y, p4.getKey().y) ? -1 : 1;
-                start2.y = (int) (offset + sign * Math.abs(value - p2.getValue()) * Math.abs(p2.getKey().y - p4.getKey().y) / Math.abs(p2.getValue() - p4.getValue()));
-                return new AbstractMap.SimpleEntry[] {new AbstractMap.SimpleEntry<Point, Point>(start1, end1), new AbstractMap.SimpleEntry<>(start2, end2)};
-            } else {
-                Point start1 = new Point(p1.getKey().x, 0);
-                Point end1 = new Point(0, p1.getKey().y);
-                Point start2 = new Point(p2.getKey().x, 0);
-                Point end2 = new Point(0, p2.getKey().y);
-                if (p1.getKey().x != p3.getKey().x) {
-                    java.util.AbstractMap.SimpleEntry<Point, Double> tmp = p3;
-                    p3 = p4;
-                    p4 = tmp;
-                }
-                int offset = p1.getKey().x;
-                int sign = offset == Math.max(p1.getKey().x, p4.getKey().x) ? -1 : 1;
-                end1.x = (int) (offset + sign * Math.abs(value - p1.getValue()) * Math.abs(p1.getKey().x - p4.getKey().x) / Math.abs(p1.getValue() - p4.getValue()));
-                offset = p1.getKey().y;
-                sign = offset == Math.max(p1.getKey().y, p3.getKey().y) ? -1 : 1;
-                start1.y = (int) (offset + sign * Math.abs(value - p1.getValue()) * Math.abs(p1.getKey().y - p3.getKey().y) / Math.abs(p1.getValue() - p3.getValue()));
-                offset = p2.getKey().x;
-                sign = offset == Math.max(p2.getKey().x, p3.getKey().x) ? -1 : 1;
-                end2.x = (int) (offset + sign * Math.abs(value - p2.getValue()) * Math.abs(p2.getKey().x - p3.getKey().x) / Math.abs(p2.getValue() - p3.getValue()));
-                offset = p2.getKey().y;
-                sign = offset == Math.max(p2.getKey().y, p4.getKey().y) ? -1 : 1;
-                start2.y = (int) (offset + sign * Math.abs(value - p2.getValue()) * Math.abs(p2.getKey().y - p4.getKey().y) / Math.abs(p2.getValue() - p4.getValue()));
-                return new AbstractMap.SimpleEntry[] {new AbstractMap.SimpleEntry<>(start1, end1), new AbstractMap.SimpleEntry<>(start2, end2)};
-            }
-        }
-
-        java.util.AbstractMap.SimpleEntry<Point, Point>[] handleCell(AbstractMap.SimpleEntry<Point, Double>[] vertices,
-                                                                   double value, double middle_value) {
-            int bigger = 0;
-            for (AbstractMap.SimpleEntry<Point, Double> vertice : vertices) {
-                if (vertice.getValue() > value) {
-                    ++bigger;
-                }
-            };
-            if (bigger == 4 || bigger == 0) {
-                return new AbstractMap.SimpleEntry[0];
-            }
-            if (bigger == 1 || bigger == 3) {
-                return handleCell1(vertices, value, bigger);
-            }
-            if (bigger == 2) {
-                return handleCell2(vertices, value, middle_value);
-            }
-            return new AbstractMap.SimpleEntry[0];
-        }
-
-        void drawGrid() {} {
-            Graphics2D g2 = createGraphics();
+        void drawGrid() {
+            Graphics2D g2 = image.createGraphics();
             g2.setColor(Color.BLACK);
+            g2.setStroke(new BasicStroke(1, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
             for (int x = 0; x < model.getGridSize().width; ++x) {
-                g2.drawLine(w * x / model.getGridSize().width,0, w * x / model.getGridSize().width,h - 1);
+                g2.drawLine(w * x / model.getGridSize().width, 0, w * x / model.getGridSize().width, h - 1);
             }
             for (int y = 0; y < model.getGridSize().height; ++y) {
-                g2.drawLine(0, h * y / model.getGridSize().height,w-1, h * y / model.getGridSize().height);
+                g2.drawLine(0, h * y / model.getGridSize().height, w - 1, h * y / model.getGridSize().height);
             }
             g2.dispose();
         }
 
+
+        class Cell {
+            Point.Double[] coords = new Point.Double[4];
+            double[] values = new double[5];
+
+            Cell(Rectangle.Double rectangle) {
+                coords[0] = new Point.Double(rectangle.getMinX(), rectangle.getMinY());
+                coords[1] = new Point.Double(rectangle.getMaxX(), rectangle.getMinY());
+                coords[2] = new Point.Double(rectangle.getMaxX(), rectangle.getMaxY());
+                coords[3] = new Point.Double(rectangle.getMinX(), rectangle.getMaxY());
+                for (int i = 0; i < 4; ++i) {
+                    values[i] = function.calc(coords[i]);
+                }
+                double x = rectangle.getCenterX();
+                double y = rectangle.getCenterY();
+                values[4] = function.calc(x, y);
+            }
+
+
+            int getCount(double level) {
+                int count = 0;
+                for (int i = 0; i < 4; ++i) {
+                    count += values[i] >= level ? 1 : 0;
+                }
+                return Math.abs(count) % 4;
+            }
+
+            public void setRotation(int rotation) {
+                int rotate = (rotation + (rotation / 4 + 1) * 4) % 4;
+                Point.Double[] tmp = new Point.Double[4];
+                double[] val = new double[5];
+                for (int i = 0; i < 4; ++i) {
+                    tmp[i] = coords[(i + rotate) % 4];
+                    val[i] = values[(i + rotate) % 4];
+                }
+                for (int i = 0; i < 4; ++i) {
+                    coords[i] = tmp[i];
+                    values[i] = val[i];
+                }
+
+            }
+
+            List<Point.Double> findIsoline(double level) {
+                int i;
+                switch (getCount(level)) {
+                    case 0:
+                        return null;
+                    case 1:
+                        for (i = 0; i < 4; ++i) {
+                            if (values[i] >= level) break;
+                        }
+                        setRotation((4 + i - 1) % 4);
+                        return findNormilizedIsolineOneDot(level);
+                    case 3:
+                        for (i = 0; i < 4; ++i) {
+                            if (values[i] < level) break;
+                        }
+                        setRotation((4 + i - 1) % 4);
+                        return findNormilizedIsolineOneDot(level);
+                    case 2:
+                        boolean check = false;
+                        int rotation = 0;
+                        for (i = 0; i < 4; ++i) {
+                            if (values[i] >= level) rotation = i;
+                            if (values[i] >= level && values[(i + 1) % 4] >= level) {
+                                check = true;
+                                rotation = i;
+                                break;
+                            }
+                        }
+                        setRotation((4 + rotation - 1) % 4);
+                        if (check) {
+                            return findNormilizedIsolineOneSide(level);
+                        } else {
+                            return findNormilizedIsolineTwoSides(level);
+                        }
+                    default:
+                        throw new AssertionError("never happened case");
+                }
+            }
+
+            private List<Point.Double> findNormilizedIsolineTwoSides(double level) {
+                double multiplier;
+                Point.Double point;
+                List<Point.Double> list = new ArrayList<>();
+                if (values[4] >= level) {
+                    for (int i = 0; i < 4; ++i) {
+                        multiplier = (level - values[i % 4]) / (values[(i + 1) % 4] - values[i % 4]);
+                        point = new Point.Double((coords[i % 4].x + (coords[(i + 1) % 4].x - coords[i % 4].x) * multiplier),
+                                (coords[i % 4].y + (coords[(i + 1) % 4].y - coords[i % 4].y) * multiplier));
+                        list.add(point);
+                    }
+                    return list;
+                } else {
+
+                    for (int i = 1; i < 5; ++i) {
+                        multiplier = (level - values[i % 4]) / (values[(i + 1) % 4] - values[i % 4]);
+                        point = new Point.Double((coords[i % 4].x + (coords[(i + 1) % 4].x - coords[i % 4].x) * multiplier),
+                                (coords[i % 4].y + (coords[(i + 1) % 4].y - coords[i % 4].y) * multiplier));
+                        list.add(point);
+                    }
+                    return list;
+
+                }
+            }
+
+            private List<Point.Double> findNormilizedIsolineOneSide(double level) {
+                double multiplier;
+                Point.Double point;
+                List<Point.Double> list = new ArrayList<>();
+                for (int i = 0; i < 3; i += 2) {
+                    multiplier = (level - values[i]) / (values[i + 1] - values[i]);
+                    point = new Point.Double((coords[i].x + (coords[i + 1].x - coords[i].x) * multiplier),
+                            (coords[i].y + (coords[i + 1].y - coords[i].y) * multiplier));
+                    list.add(point);
+                }
+                return list;
+            }
+
+            private List<Point.Double> findNormilizedIsolineOneDot(double level) {
+                double multiplier;
+                Point.Double point;
+                List<Point.Double> list = new ArrayList<>();
+                for (int i = 0; i < 2; ++i) {
+                    multiplier = (level - values[i]) / (values[i + 1] - values[i]);
+                    point = new Point.Double((coords[i].x + (coords[i + 1].x - coords[i].x) * multiplier),
+                            (coords[i].y + (coords[i + 1].y - coords[i].y) * multiplier));
+                    list.add(point);
+                }
+                return list;
+            }
+        }
+
+
         void drawIsolines() {
-            Color color = model.getIsolineColor();
-            int horizontal_cells = model.getGridSize().width;
-            int vertical_cells = model.getGridSize().height;
-            double xStep = (function.getBounds().width) / w;
-            double yStep = (function.getBounds().height) / h;
-            double step = ((function.getMax() - function.getMin()) / (model.getKeyValues().size() + 1));
-            double cell_width = (function.getBounds().width + 1.0 * xStep) / horizontal_cells;
-            double cell_height = (function.getBounds().height + 1.0 * yStep) / vertical_cells;
-            double scaled_cell_width = cell_width / xStep;
-            double scaled_cell_height = cell_height / yStep;
-            for (int j = 0; j < vertical_cells; ++j) {
-                for (int i = 0; i < horizontal_cells; ++i) {
-                    int x = (int) (Math.round(i * scaled_cell_width) - 1);
-                    int x_next = (int) (Math.round((i + 1) * scaled_cell_width) - 1);
-                    int y = (int) (Math.round(j * scaled_cell_height) - 1);
-                    int y_next = (int) (Math.round((j + 1) * scaled_cell_height) - 1);
-                    double f_x = i * cell_width - 1.0 * xStep;
-                    double f_x_next = (i + 1) * cell_width - 1.0 * xStep;
-                    double f_y = j * cell_height - 1.0 *yStep;
-                    double f_y_next = (j + 1) * cell_height - 1.0 * yStep;
-                    AbstractMap.SimpleEntry<Point, Double>[] cell = new AbstractMap.SimpleEntry[]{
-                            new AbstractMap.SimpleEntry<>(new Point(x, h - 1 - y),
-                                    function.calc(f_x, f_y)),
+            double step = function.getRange() / (model.getKeyValues() + 1);
+            for (int i = 1; i <= model.getKeyValues(); ++i) {
+                drawIsolineByLevel(i * step + function.getMin());
+            }
+            model.getUserIsolines().forEach(this::drawIsolineByLevel);
+            model.getDynamicIsoline().ifPresent(this::drawIsolineByLevel);
+        }
 
-                            new AbstractMap.SimpleEntry<>(new Point(x_next, h - 1 - y),
-                                    function.calc(f_x_next, f_y)),
-
-                            new AbstractMap.SimpleEntry<>(new Point(x, h - 1 - y_next),
-                                    function.calc(f_x, f_y_next)),
-
-                            new AbstractMap.SimpleEntry<>(new Point(x_next, h - 1 - y_next),
-                                    function.calc(f_x_next, f_y_next))
-                    };
-                    double middle_value = function.calc(i * cell_width / 2, (j * cell_height / 2));
-                    Graphics2D g2 = createGraphics();
-                    g2.setColor(Color.BLACK);
-                    for (int k = 0; k < model.getKeyValues().size(); ++k) {
-                        double isoline_level = model.getFunction().getMin() + (k + 1) * step;
-                        AbstractMap.SimpleEntry<Point, Point>[] isolines = handleCell(cell, isoline_level, middle_value);
-                        for (AbstractMap.SimpleEntry<Point, Point> isoline : isolines) {
+        void drawIsolineByLevel(double level) {
+            int width = model.getGridSize().width;
+            int height = model.getGridSize().height;
+            double cellWidth = model.getFunction().getWidth() / width;
+            double cellHeight = model.getFunction().getHeight() / height;
+            Cell cell;
+            Graphics2D g2 = image.createGraphics();
+            g2.setColor(model.getIsolineColor());
+            g2.setStroke(new BasicStroke(3, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+            Dimension size = new Dimension(w, h);
+            for (int x = 0; x <= width; ++x) {
+                for (int y = 0; y <= height; ++y) {
+                    Point.Double p = function.cast(x, y, model.getGridSize());
+                    cell = new Cell(new Rectangle.Double(p.x, p.y, cellWidth, cellHeight));
+                    List<Point.Double> isolines = cell.findIsoline(level);
+                    if (isolines != null)
+                        for (int i = 0; i < isolines.size(); i += 2) {
+                            Point p1 = function.cast(isolines.get(i), size);
+                            Point p2 = function.cast(isolines.get(i + 1), size);
+                            g2.drawLine(p1.x, p1.y, p2.x, p2.y);
                             if (model.isGridDots()) {
-                                g2.fillOval(isoline.getKey().x, isoline.getKey().y, 3, 3);
-                                g2.fillOval(isoline.getValue().x, isoline.getValue().y, 3, 3);
+                                g2.drawOval(p1.x - radius / 2, p1.y - radius / 2, radius, radius);
+                                g2.drawOval(p2.x - radius / 2, p2.y - radius / 2, radius, radius);
                             }
-                            g2.drawLine(isoline.getKey().x, isoline.getKey().y, isoline.getValue().x, isoline.getValue().y);
                         }
-                    }
-                    for (double level : model.getUserIsolines()) {
-                        AbstractMap.SimpleEntry<Point, Point>[] isolines = handleCell(cell, level, middle_value);
-                        for (AbstractMap.SimpleEntry<Point, Point> isoline : isolines) {
-                            if (model.isGridDots()) {
-                                g2.fillOval(isoline.getKey().x, isoline.getKey().y, 3, 3);
-                                g2.fillOval(isoline.getValue().x, isoline.getValue().y, 3, 3);
-                            }
-                            g2.drawLine(isoline.getKey().x, isoline.getKey().y, isoline.getValue().x, isoline.getValue().y);
-                        }
-                    }
-                    g2.dispose();
                 }
             }
         }
 
-        public void drawValue(Point2D.Double aDouble) {
-
+        BufferedImage getImage() {
+            return image;
         }
     }
 
-    public class Legend extends JPanel implements IsolineModelObserver {
+    public class Legend extends JPanel implements Observer, MouseMotionListener, MouseListener {
         JLabel label = new JLabel();
+        FunctionZ function;
+        BufferedImage image;
 
         Legend() {
             super(new GridLayout(1, 1));
             setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));
-            setPreferredSize(new Dimension(800, 100));
+            setPreferredSize(new Dimension(800, 120));
             add(label);
+
+            label.addMouseMotionListener(this);
+            label.addMouseListener(this);
         }
 
         @Override
-        public void update(IsolineModel isolineModel) {
-            FunctionMap map = new FunctionMap(new FunctionZ() {
-                @Override
-                public Rectangle.Double getBounds() {
-                    return new Rectangle.Double(0, 0, 1, 0);
-                }
+        public void update(Observable o, Object arg) {
+            synchronized (model) {
+                function = new FunctionZ() {
+                    {
+                        setBounds(new Rectangle.Double(0, 0, 1, 1));
+                        setDimension(getPreferredSize());
+                    }
 
-                @Override
-                public double calc(double x, double y) {
-                    return x * (model.getFunction().getMax() - model.getFunction().getMin()) + model.getFunction().getMin();
+                    @Override
+                    public double calc(double x, double y) {
+                        return x * model.getFunction().getRange() + model.getFunction().getMin();
+                    }
+                };
+                FunctionMap map = new FunctionMap(function, new Dimension(getPreferredSize().width, getPreferredSize().height - 20));
+                if (model.isPlot()) {
+                    map.drawMap();
                 }
+                if (model.isIsolines()) {
+                    map.drawIsolines();
+                }
+                this.image = new BufferedImage(800, 120, BufferedImage.TYPE_INT_ARGB);
+                Graphics2D g2 = this.image.createGraphics();
+                Font font = new Font("Serif", Font.PLAIN, 10);
+                g2.setFont(font);
+                g2.setColor(Color.BLACK);
+                FontMetrics fm = g2.getFontMetrics();
+                int step = getPreferredSize().width / (model.getKeyValues() + 1);
+                g2.drawImage(map.getImage(), 0, 20, null);
+                for (int i = 1; i <= model.getKeyValues(); ++i) {
+                    String str = String.format("%2.4f", function.calc(function.cast(i * step, 0, getPreferredSize())));
+                    Rectangle2D bounds = fm.getStringBounds(str, g2);
+                    g2.drawString(str, (int) (i * step - bounds.getWidth() / 2), 10 - (int) bounds.getHeight() / 2 + fm.getAscent());
+                }
+                g2.dispose();
+                label.setIcon(new ImageIcon(image));
+            }
+        }
 
-                @Override
-                public double getMax() {
-                    return model.getFunction().getMax();
-                }
+        @Override
+        public void mouseDragged(MouseEvent e) {
+            double value = function.calc(function.cast(e.getPoint(), label.getSize()));
+            if (model.isShowValue()) {
+                if (setStatus != null)
+                    setStatus.accept(" val=" + value);
+            }
+            if (model.isDynamic()) {
+                model.setDynamicIsolineLevel(value);
+            }
+        }
 
-                @Override
-                public double getMin() {
-                    return model.getFunction().getMin();
-                }
-            }, getPreferredSize());
-            if (model.isPlot()) {
-                map.drawMap();
+        @Override
+        public void mouseMoved(MouseEvent e) {
+            if (model.isShowValue()) {
+                if (setStatus != null)
+                    setStatus.accept(" val=" + function.calc(function.cast(e.getPoint(), label.getSize())));
             }
-            if (model.isIsolines()) {
-                map.drawIsolines();
+        }
+
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            if (model.isClicking()) {
+                model.addUserIsoline(function.calc(function.cast(e.getPoint(), label.getSize())));
             }
-            if (model.isShowValue() && model.getCursor() != null) {
-                map.drawValue(new Point.Double(
-                        (model.getFunction().calc(model.getCursor().x, model.getCursor().y) - model.getFunction().getMin()) / (model.getFunction().getMax() - model.getFunction().getMin()),
-                        0));
+        }
+
+        @Override
+        public void mousePressed(MouseEvent e) {
+            double value = function.calc(function.cast(e.getPoint(), label.getSize()));
+            if (model.isDynamic()) {
+                model.setDynamicIsolineLevel(value);
             }
-            label.setIcon(new ImageIcon(map));
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+
+        }
+
+        @Override
+        public void mouseEntered(MouseEvent e) {
+
+        }
+
+        @Override
+        public void mouseExited(MouseEvent e) {
+
         }
     }
 
-    public class Face extends JPanel implements IsolineModelObserver {
+    public class Face extends JPanel implements Observer, MouseListener, MouseMotionListener {
         JLabel label = new JLabel();
 
         Face() {
             super(new GridLayout(1, 1));
             setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));
             setPreferredSize(new Dimension(800, 500));
+            model.getFunction().setDimension(getPreferredSize());
             add(label);
+            label.addMouseListener(this);
+            label.addMouseMotionListener(this);
         }
 
         @Override
-        public void update(IsolineModel isolineModel) {
-            FunctionMap map = new FunctionMap(model.getFunction(), getPreferredSize());
-            if (model.isPlot()) {
-                map.drawMap();
+        public void update(Observable o, Object arg) {
+            synchronized (model) {
+                FunctionMap map = new FunctionMap(model.getFunction(), getPreferredSize());
+                if (model.isPlot()) {
+                    map.drawMap();
+                }
+                if (model.isGrid()) {
+                    map.drawGrid();
+                }
+                if (model.isIsolines()) {
+                    map.drawIsolines();
+                }
+                label.setIcon(new ImageIcon(map.getImage()));
             }
-            if (model.isGrid()) {
-                map.drawGrid();
-            }
-            if (model.isIsolines()) {
-                map.drawIsolines();
-            }
-            if (model.isShowValue() && model.getCursor() != null) {
-                map.drawValue(model.getCursor());
-            }
-            label.setIcon(new ImageIcon(map));
         }
+
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            if (model.isClicking()) {
+                model.addUserIsoline(model.getFunction().calc(model.getFunction().cast(e.getPoint(), label.getSize())));
+            }
+        }
+
+        @Override
+        public void mousePressed(MouseEvent e) {
+            if (model.isDynamic()) {
+                Point.Double funcCoords = model.getFunction().cast(e.getPoint(), label.getSize());
+                double value = model.getFunction().calc(funcCoords);
+                model.setDynamicIsolineLevel(value);
+            }
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+
+        }
+
+        @Override
+        public void mouseEntered(MouseEvent e) {
+
+        }
+
+        @Override
+        public void mouseExited(MouseEvent e) {
+
+        }
+
+        @Override
+        public void mouseDragged(MouseEvent e) {
+            Point.Double funcCoords = model.getFunction().cast(e.getPoint(), label.getSize());
+            double value = model.getFunction().calc(funcCoords);
+            if (model.isShowValue()) {
+                if (setStatus != null)
+                    setStatus.accept("x=" + funcCoords.x + " y=" + funcCoords.y + " val=" + value);
+            }
+            if (model.isDynamic()) {
+                model.setDynamicIsolineLevel(value);
+            }
+        }
+
+        @Override
+        public void mouseMoved(MouseEvent e) {
+            if (model.isShowValue()) {
+                Point.Double funcCoords = model.getFunction().cast(e.getPoint(), label.getSize());
+                if (setStatus != null)
+                    setStatus.accept("x=" + funcCoords.x + " y=" + funcCoords.y + " val=" + model.getFunction().calc(funcCoords));
+            }
+        }
+
     }
 
-    public IsolinesPanel(MutableIsolineModel model) {
+    public IsolinesPanel(MutableIsolineModel model, Consumer<String> setStatus) {
         super(new GridBagLayout());
         this.model = model;
+        this.setStatus = setStatus;
         face = new Face();
         legend = new Legend();
-        model.addObserver(this);
         model.addObserver(face);
         model.addObserver(legend);
         ContainerUtils.add(this, face, 0, 0, 1, 1);

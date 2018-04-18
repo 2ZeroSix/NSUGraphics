@@ -4,13 +4,18 @@ import actions.IconAction;
 
 import javax.swing.*;
 import java.awt.*;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.Optional;
 
-public class IconButton extends JButton {
+public class IconButton extends JButton implements PropertyChangeListener {
 
 
 
     public IconButton(IconAction action) {
         super(action);
+        action.addPropertyChangeListener(this);
+        setSelected((Boolean) Optional.ofNullable(action.getValue(Action.SELECTED_KEY)).orElse(false));
         setHideActionText( true );
         setName((String) action.getValue(Action.NAME));
 //        setToolTipText((String) action.getValue(Action.SHORT_DESCRIPTION));
@@ -23,4 +28,10 @@ public class IconButton extends JButton {
         setRolloverSelectedIcon((Icon)action.getValue(IconAction.ROLLOVER_SELECTED_ICON));
     }
 
+    @Override
+    public void propertyChange(PropertyChangeEvent evt) {
+        if (Action.SELECTED_KEY.equals(evt.getPropertyName())) {
+            setSelected((Boolean) evt.getNewValue());
+        }
+    }
 }
