@@ -19,6 +19,7 @@ public class IsolineModelImpl extends MutableIsolineModel {
         setIsolines(true);
         setShowValue(true);
         setInterpolating(true);
+        setGridSize(new Dimension(10, 10));
     }
 
     private static FunctionZ getDefaultFunctionZ() {

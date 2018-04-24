@@ -1,13 +1,11 @@
 package model;
 
 import java.awt.*;
-import java.awt.geom.Dimension2D;
-import java.awt.geom.Rectangle2D;
 import java.util.Observable;
 
 public abstract class FunctionZ extends Observable {
     private Rectangle.Double bounds;
-    private Dimension dimension = new Dimension(0, 0);
+    private Dimension grid = new Dimension(0, 0);
     private Point.Double range = new Point.Double(0, 0);
 
     public Rectangle.Double getBounds() {
@@ -51,6 +49,36 @@ public abstract class FunctionZ extends Observable {
         return calc(point.x, point.y);
     }
 
+    public double calcByGrid(Point.Double point) {
+        return calcByGrid(point.x, point.y);
+    }
+
+    private double calcByGrid(double x, double y) {
+        double gridX = getWidth() / (grid.getWidth());
+        double gridY = getHeight() / (grid.getHeight());
+        double interpolatedValue = 0;
+        for (int i = 0; i <= 1; ++i) {
+            double posX = ((int)(x / gridX) + i) * gridX;
+            double subInterpolatedValue = 0;
+            for (int j = 0; j <= 1; ++j) {
+                double posY = ((int)(y / gridY) + j) * gridY;
+                double coefficient = 1 - Math.abs(posY - y) / Math.abs(gridY);
+                subInterpolatedValue += calc(posX, posY) * coefficient;
+            }
+            double coefficient = 1 - Math.abs(posX - x) / Math.abs(gridX);
+            interpolatedValue += subInterpolatedValue * coefficient;
+        }
+        return interpolatedValue;
+    }
+
+    private double calcByGrid(Point p) {
+        double gridX = getWidth() / grid.getWidth();
+        double gridY = getHeight() / grid.getHeight();
+        return calc(p.x * gridX, p.y * gridY);
+    }
+
+
+
     public double getMax() {
         return range.y;
     }
@@ -63,15 +91,19 @@ public abstract class FunctionZ extends Observable {
         return getMax() - getMin();
     }
 
-    public void setDimension(Dimension dimension) {
-        this.dimension = dimension;
+    public Dimension getGrid() {
+        return grid;
+    }
+
+    public void setGrid(Dimension grid) {
+        this.grid = grid;
         updateRange();
     }
 
     private void updateRange() {
         double min = Double.MAX_VALUE, max = Double.MIN_VALUE;
-        double xStep = getWidth() / dimension.getWidth();
-        double yStep = getHeight() / dimension.getHeight();
+        double xStep = getWidth() / grid.getWidth();
+        double yStep = getHeight() / grid.getHeight();
         if (getWidth() > 0)
             for (double x = getMinX(); x <= getMaxX(); x += xStep) {
                 if (getHeight() > 0)

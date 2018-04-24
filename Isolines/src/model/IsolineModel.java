@@ -28,7 +28,7 @@ public abstract class IsolineModel extends Observable {
     public static final String ISOLINE_COLOR = "Isoline color";
     protected Color isolineColor = Color.BLACK;
     public static final String GRID_SIZE = "Grid size";
-    protected Dimension gridSize = new Dimension(10, 10);
+    protected Dimension gridSize;
     public static final String USER_ISOLINES = "User isolines";
     protected Set<Double> userIsolines = new HashSet<>();
     public static final String DYNAMIC_ISOLINE_LEVEL = "Dynamic isoline level";
@@ -59,7 +59,7 @@ public abstract class IsolineModel extends Observable {
     }
 
     public Dimension getGridSize() {
-        return gridSize;
+        return function.getGrid();
     }
 
     public boolean isGridDots() {

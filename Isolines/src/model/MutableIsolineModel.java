@@ -60,6 +60,7 @@ public abstract class MutableIsolineModel extends IsolineModel {
     public synchronized void setGridSize(Dimension gridSize) {
         if (!Objects.equals(this.gridSize, gridSize)) {
             this.gridSize = gridSize;
+            function.setGrid(gridSize);
             setChanged();
             notifyObservers(GRID_SIZE);
         }
