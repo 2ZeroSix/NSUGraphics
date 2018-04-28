@@ -58,10 +58,10 @@ public abstract class FunctionZ extends Observable {
         double gridY = getHeight() / (grid.getHeight());
         double interpolatedValue = 0;
         for (int i = 0; i <= 1; ++i) {
-            double posX = ((int)(x / gridX) + i) * gridX;
+            double posX = getMinX() + ((int)((x - getMinX()) / gridX) + i) * gridX;
             double subInterpolatedValue = 0;
             for (int j = 0; j <= 1; ++j) {
-                double posY = ((int)(y / gridY) + j) * gridY;
+                double posY = getMinY() + ((int)((y - getMinY()) / gridY) + j) * gridY;
                 double coefficient = 1 - Math.abs(posY - y) / Math.abs(gridY);
                 subInterpolatedValue += calc(posX, posY) * coefficient;
             }
@@ -69,12 +69,6 @@ public abstract class FunctionZ extends Observable {
             interpolatedValue += subInterpolatedValue * coefficient;
         }
         return interpolatedValue;
-    }
-
-    private double calcByGrid(Point p) {
-        double gridX = getWidth() / grid.getWidth();
-        double gridY = getHeight() / grid.getHeight();
-        return calc(p.x * gridX, p.y * gridY);
     }
 
 

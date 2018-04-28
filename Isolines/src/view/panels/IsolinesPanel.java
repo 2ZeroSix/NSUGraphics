@@ -102,7 +102,7 @@ public class IsolinesPanel extends JPanel {
                 coords[2] = new Point.Double(rectangle.getMaxX(), rectangle.getMaxY());
                 coords[3] = new Point.Double(rectangle.getMinX(), rectangle.getMaxY());
                 for (int i = 0; i < 4; ++i) {
-                    values[i] = function.calcByGrid(coords[i]);
+                    values[i] = function.calc(coords[i]);
                     values[4] += values[i];
                 }
                 values[4] /= 4.;
