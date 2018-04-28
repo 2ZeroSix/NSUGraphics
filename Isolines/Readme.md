@@ -4,4 +4,5 @@
 * рисование: view panels.IsolinesPanel.FunctionMap
     * изолинии: drawIsolines
     * карта высот: drawMap
-    * сетка drawGrid
+    * сетка: drawGrid
+    * изолинии: drawIsolines
