@@ -5,4 +5,3 @@
     * изолинии: drawIsolines
     * карта высот: drawMap
     * сетка: drawGrid
-    * изолинии: drawIsolines
