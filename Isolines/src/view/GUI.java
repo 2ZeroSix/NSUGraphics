@@ -116,7 +116,7 @@ public class GUI extends ToolBarStatusBarFrame {
             model.setGrid(!model.isGrid());
         }
     };
-    private IsolineAction toggleMap = new IsolineAction("map", model) {
+    private IsolineAction toggleMap = new IsolineAction("map", "real face or interpolated by grid ", model) {
         @Override
         public void update(Observable isolineModel, Object object) {
             putValue(Action.SELECTED_KEY, model.isPlot());
@@ -127,7 +127,7 @@ public class GUI extends ToolBarStatusBarFrame {
             model.setPlot(!model.isPlot());
         }
     };
-    private IsolineAction toggleIsolines = new IsolineAction("contour lines", model) {
+    private IsolineAction toggleIsolines = new IsolineAction("contour lines", "isolines", model) {
         @Override
         public void update(Observable isolineModel, Object object) {
             putValue(Action.SELECTED_KEY, model.isIsolines());
