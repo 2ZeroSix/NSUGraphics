@@ -341,13 +341,7 @@ public class GUI extends ToolBarStatusBarFrame {
 
     private void initWorkspace() {
         getWorkWindow().setLayout(new BorderLayout());
-        JPanel workSpace = new JPanel(new GridBagLayout());
-        JScrollPane scrollPane = new JScrollPane(workSpace,
-                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.getHorizontalScrollBar().setUnitIncrement(10);
-        scrollPane.getVerticalScrollBar().setUnitIncrement(10);
-        add(scrollPane, BorderLayout.CENTER);
-        add(workSpace, new IsolinesPanel(model, this::setStatus), 0, 0, 1, 1);
+        add(new IsolinesPanel(model, this::setStatus), BorderLayout.CENTER);
     }
 
     private void initToolBarItems() {

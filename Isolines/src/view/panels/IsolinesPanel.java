@@ -7,9 +7,7 @@ import view.ContainerUtils;
 import javax.swing.*;
 import javax.swing.border.BevelBorder;
 import java.awt.*;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
+import java.awt.event.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
@@ -327,16 +325,16 @@ public class IsolinesPanel extends JPanel {
         }
     }
 
-    public class Legend extends JPanel implements Observer, MouseMotionListener, MouseListener {
-        JLabel label = new JLabel();
+    public class Legend extends JLabel implements Observer, MouseMotionListener, MouseListener {
+        JLabel label = this;
         FunctionZ function;
         BufferedImage image;
 
         Legend() {
-            super(new GridLayout(1, 1));
+//            super(new GridLayout(1, 1));
             setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));
-            setPreferredSize(new Dimension(800, 120));
-            add(label);
+            setPreferredSize(new Dimension(80, 12));
+//            add(label);
 
             label.addMouseMotionListener(this);
             label.addMouseListener(this);
@@ -344,11 +342,12 @@ public class IsolinesPanel extends JPanel {
 
         @Override
         public void update(Observable o, Object arg) {
+            if (getSize().width <= 0 || getSize().height <= 0) return;
             synchronized (model) {
                 function = new FunctionZ() {
                     {
                         setBounds(new Rectangle.Double(0, 0, 1, 1));
-                        setGrid(getPreferredSize());
+                        setGrid(getSize());
                     }
 
                     @Override
@@ -356,21 +355,21 @@ public class IsolinesPanel extends JPanel {
                         return x * model.getFunction().getRange() + model.getFunction().getMin();
                     }
                 };
-                FunctionMap map = new FunctionMap(function, new Dimension(getPreferredSize().width, getPreferredSize().height - 20));
+                FunctionMap map = new FunctionMap(function, new Dimension(getSize().width, getSize().height - 20));
                 map.drawMap();
                 if (model.isIsolines()) {
                     map.drawIsolines(model.isIsolines(), false);
                 }
-                this.image = new BufferedImage(800, 120, BufferedImage.TYPE_INT_ARGB);
+                this.image = new BufferedImage(getSize().width, getSize().height, BufferedImage.TYPE_INT_ARGB);
                 Graphics2D g2 = this.image.createGraphics();
                 Font font = new Font("Serif", Font.PLAIN, 10);
                 g2.setFont(font);
                 g2.setColor(Color.BLACK);
                 FontMetrics fm = g2.getFontMetrics();
-                int step = getPreferredSize().width / (model.getKeyValues() + 1);
+                int step = getSize().width / (model.getKeyValues() + 1);
                 g2.drawImage(map.getImage(), 0, 20, null);
                 for (int i = 1; i <= model.getKeyValues(); ++i) {
-                    String str = String.format("%2.4f", function.calc(function.cast(i * step, 0, getPreferredSize())));
+                    String str = String.format("%2.4f", function.calc(function.cast(i * step, 0, getSize())));
                     Rectangle2D bounds = fm.getStringBounds(str, g2);
                     g2.drawString(str, (int) (i * step - bounds.getWidth() / 2), 10 - (int) bounds.getHeight() / 2 + fm.getAscent());
                 }
@@ -430,22 +429,23 @@ public class IsolinesPanel extends JPanel {
         }
     }
 
-    public class Face extends JPanel implements Observer, MouseListener, MouseMotionListener {
-        JLabel label = new JLabel();
+    public class Face extends JLabel implements Observer, MouseListener, MouseMotionListener {
+        JLabel label = this;
 
         Face() {
-            super(new GridLayout(1, 1));
+//            super(new GridLayout(1, 1));
             setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));
-            setPreferredSize(new Dimension(800, 500));
-            add(label);
+            setPreferredSize(new Dimension(80, 50));
+//            add(label);
             label.addMouseListener(this);
             label.addMouseMotionListener(this);
         }
 
         @Override
         public void update(Observable o, Object arg) {
+            if (getSize().width <= 0 || getSize().height <= 0) return;
             synchronized (model) {
-                FunctionMap map = new FunctionMap(model.getFunction(), getPreferredSize());
+                FunctionMap map = new FunctionMap(model.getFunction(), getSize());
                 map.drawMap();
                 if (model.isGrid()) {
                     map.drawGrid();
@@ -520,7 +520,22 @@ public class IsolinesPanel extends JPanel {
         Legend legend = new Legend();
         model.addObserver(face);
         model.addObserver(legend);
-        ContainerUtils.add(this, face, 0, 0, 1, 1);
-        ContainerUtils.add(this, legend, 0, 1, 1, 1);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 0.5;
+        gbc.weighty = 0.5;
+        gbc.fill = GridBagConstraints.BOTH;
+        add(face, gbc);
+        gbc.gridy = 1;
+        gbc.weighty = 0.12;
+        add(legend, gbc);
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent componentEvent) {
+                face.update(model, null);
+                legend.update(model, null);
+            }
+        });
     }
 }
