@@ -6,14 +6,18 @@ import java.util.Observable;
 public class Camera extends Observable {
     private Matrix4x4 proj = new Matrix4x4();
     private Matrix4x4 view = new Matrix4x4();
-    private Vector4 pos = new Vector4();
-    private Vector4 lookAt = new Vector4();
-    private Vector4 up = new Vector4();
-    private double frontClip;
-    private double backClip;
-    private double frontWidth;
-    private double frontHeight;
+    private Matrix4x4 viewProj = new Matrix4x4();
+    private Vector4 eye = new Vector4(-10, 0, 0);
+    private Vector4 target = new Vector4(10, 0, 0);
+    private Vector4 up = new Vector4(0, 1, 0);
+    private double frontClip = 5;
+    private double backClip = 8;
+    private double frontWidth = 1;
+    private double frontHeight = 1;
 
+    public Camera() {
+        recalcMatrices();
+    }
     public Matrix4x4 getView() {
         return view;
     }
@@ -25,7 +29,7 @@ public class Camera extends Observable {
     public Camera setFrontClip(double frontClip) {
         if (!Objects.equals(this.frontClip, frontClip)) {
             this.frontClip = frontClip;
-            notifyObservers();
+            recalcMatrices();
         }
         return this;
     }
@@ -37,7 +41,7 @@ public class Camera extends Observable {
     public Camera setBackClip(double backClip) {
         if (!Objects.equals(this.backClip, backClip)) {
             this.backClip = backClip;
-            notifyObservers();
+            recalcMatrices();
         }
         return this;
     }
@@ -49,7 +53,7 @@ public class Camera extends Observable {
     public Camera setFrontWidth(double frontWidth) {
         if (!Objects.equals(this.frontWidth, frontWidth)) {
             this.frontWidth = frontWidth;
-            notifyObservers();
+            recalcMatrices();
         }
         return this;
     }
@@ -61,7 +65,7 @@ public class Camera extends Observable {
     public Camera setFrontHeight(double frontHeight) {
         if (!Objects.equals(this.frontHeight, frontHeight)) {
             this.frontHeight = frontHeight;
-            notifyObservers();
+            recalcMatrices();
         }
         return this;
     }
@@ -70,25 +74,25 @@ public class Camera extends Observable {
         return proj;
     }
 
-    public Vector4 getPos() {
-        return pos;
+    public Vector4 getEye() {
+        return eye;
     }
 
-    public Camera setPos(Vector4 pos) {
-        if (!Objects.equals(this.pos, pos)) {
-            this.pos = pos;
+    public Camera setEye(Vector4 eye) {
+        if (!Objects.equals(this.eye, eye)) {
+            this.eye = eye;
             recalcMatrices();
         }
         return this;
     }
 
-    public Vector4 getLookAt() {
-        return lookAt;
+    public Vector4 getTarget() {
+        return target;
     }
 
-    public Camera setLookAt(Vector4 lookAt) {
-        if (!Objects.equals(this.lookAt, lookAt)) {
-            this.lookAt = lookAt;
+    public Camera setTarget(Vector4 target) {
+        if (!Objects.equals(this.target, target)) {
+            this.target = target;
             recalcMatrices();
         }
         return this;
@@ -108,11 +112,42 @@ public class Camera extends Observable {
 
 
     private void recalcMatrices() {
+        Vector4 zaxis = eye.sub(target).normalizeAs3D();
+        Vector4 xaxis = up.crossProduct(zaxis).normalizeAs3D();
+        Vector4 yaxis = zaxis.crossProduct(xaxis);
+        Matrix4x4 orientation = new Matrix4x4(new double[]{
+                xaxis.p[0], yaxis.p[0], zaxis.p[0], 0,
+                xaxis.p[1], yaxis.p[1], zaxis.p[1], 0,
+                xaxis.p[2], yaxis.p[2], zaxis.p[2], 0,
+                0, 0, 0, 1
+        });
 
+        Matrix4x4 translation = new Matrix4x4(new double[]{
+                1, 0, 0, 0,
+                0, 1, 0, 0,
+                0, 0, 1, 0,
+                -eye.p[0], -eye.p[1], -eye.p[2], 1
+        });
+        view = orientation.mult(translation);
+
+        proj = new Matrix4x4(new double[]{
+                2. * frontClip / frontWidth, 0, 0, 0,
+                0, 2. * frontClip/ frontHeight, 0, 0,
+                0, 0, backClip / (backClip - frontClip), - frontClip * backClip / (backClip - frontClip),
+                0, 0, 1, 0
+        });
+
+        viewProj = view.mult(proj);
         notifyObservers();
     }
 
-    public Matrix4x4 getMatrix() {
-        return null; // TODO implement;
+    @Override
+    public void notifyObservers(Object arg) {
+        setChanged();
+        super.notifyObservers(arg);
+    }
+
+    public Matrix4x4 getViewProj() {
+        return viewProj;
     }
 }

@@ -2,9 +2,11 @@ package view;
 
 import actions.IconAction;
 import view.buttons.IconButton;
+import view.panels.ScenePanel;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
@@ -77,7 +79,7 @@ public class GUI extends ToolBarStatusBarFrame {
     };
 
     public GUI() {
-        super("Isolines");
+        super("WireFrame");
         initWindow();
         initWorkspace();
         initMenuBar();
@@ -98,13 +100,15 @@ public class GUI extends ToolBarStatusBarFrame {
 
     private void initWorkspace() {
         getWorkWindow().setLayout(new BorderLayout());
-        JPanel workSpace = new JPanel(new GridBagLayout());
-        JScrollPane scrollPane = new JScrollPane(workSpace,
-                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.getHorizontalScrollBar().setUnitIncrement(10);
-        scrollPane.getVerticalScrollBar().setUnitIncrement(10);
-        add(scrollPane, BorderLayout.CENTER);
+//        JPanel workSpace = new JPanel(new GridBagLayout());
+//        JScrollPane scrollPane = new JScrollPane(workSpace,
+//                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+//        scrollPane.getHorizontalScrollBar().setUnitIncrement(10);
+//        scrollPane.getVerticalScrollBar().setUnitIncrement(10);
+//        add(scrollPane, BorderLayout.CENTER);
 //        add(workSpace, new IsolinesPanel(model, this::setStatus), 0, 0, 1, 1);
+//        add(workSpace, BorderLayout.CENTER);
+        add(new ScenePanel(), BorderLayout.CENTER);
         // TODO add main panel
     }
 
