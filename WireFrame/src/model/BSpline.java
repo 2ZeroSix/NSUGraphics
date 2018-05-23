@@ -1,33 +1,40 @@
 package model;
 
+import com.sun.javafx.collections.ObservableListWrapper;
+import javafx.beans.Observable;
+import javafx.beans.property.ListProperty;
+import javafx.beans.property.Property;
+import javafx.beans.property.SimpleListProperty;
+import javafx.beans.property.SimpleObjectProperty;
+
 import java.awt.*;
 import java.awt.geom.Point2D;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.*;
 import java.util.List;
-import java.util.Random;
 import java.util.stream.Stream;
 
 public class BSpline {
     {
         Random random = new Random();
-        color = new Color(random.nextInt(255),
+        color = new SimpleObjectProperty<>(new Color(random.nextInt(255),
                 random.nextInt(255),
-                random.nextInt(255));
+                random.nextInt(255)));
     }
-    private Color color;
-    private ArrayList<Point2D> points = new ArrayList<>();
-    private ArrayList<Segment> segments = new ArrayList<>();
+    final public Property<Color> color;
+    final public ListProperty<Property<Point2D>> points = new SimpleListProperty<>(new ObservableListWrapper<>(new ArrayList<>(), param -> new Observable[]{param}));
+    final public ListProperty<Segment> segments = new SimpleListProperty<>(new ObservableListWrapper<>(new ArrayList<>()));
+    {
 
-    static class Segment {
+    }
+    class Segment {
 
         private final static int LENGTH_COUNT = 20;
 
-        private Point2D[] points;
+        private int pos;
         private double length;
 
-        Segment(Point2D[] points) {
-            this.points = points;
+        Segment(int i) {
+            this.pos = i;
         }
 
         Point2D getP(double t) {
@@ -39,9 +46,9 @@ public class BSpline {
             };
 
             Point2D.Double result = new Point2D.Double();
-            for (int i = 0; i < points.length; i++) {
-                result.x += points[i].getX() * k[i] / 6;
-                result.y += points[i].getY() * k[i] / 6;
+            for (int i = 0; i < 4; i++) {
+                result.x += points.get(pos + i).getValue().getX() * k[i] / 6;
+                result.y += points.get(pos + i).getValue().getY() * k[i] / 6;
             }
 
             return result;
@@ -49,7 +56,7 @@ public class BSpline {
 
         double getLength() {
             length = 0;
-            double step = 1 / (LENGTH_COUNT);
+            double step = 1. / (LENGTH_COUNT);
             Point2D p1 = getP(0);
             Point2D p2 = p1;
             for (int i = 1; i <= LENGTH_COUNT; ++i) {
@@ -62,44 +69,34 @@ public class BSpline {
         }
     }
 
-    public static BSpline getEmptySpline() {
-        BSpline spline = new BSpline ();
-        spline.points.clear();
-        spline.segments.clear();
-
-        return spline;
-    }
-
     public BSpline () {
-        addPoint(new Point2D.Double(-0.5, -0.25));
-        addPoint(new Point2D.Double(0.5, -0.5));
-        addPoint(new Point2D.Double(-0.5, -0.75));
-        addPoint(new Point2D.Double(0.5, -1));
     }
 
     public void addPoint(Point2D point) {
-        points.add(point);
+        points.add(new SimpleObjectProperty<>(point));
 
-        if (points.size() < 4)
+        if (points.getValue().size() < 4)
+            return;
+        int i = points.getValue().size() - 4;
+        segments.add(new Segment(i));
+    }
+
+    public void removePoint(Point2D p) {
+        removePoint(find(p));
+    }
+
+    public void removePoint(int i) {
+        if (i < 0) return;
+        points.remove(i);
+        if (segments.size() <= 0)
             return;
 
-        Point2D[] segPoints = points.stream()
-                .skip(points.size() - 4)
-                .toArray(Point2D[]::new);
-        segments.add(new Segment(segPoints));
+        segments.remove(Integer.max(i - 3, 0));
+        for (int j = Integer.max(i - 4, 0); j < segments.size(); ++j) {
+            segments.get(j).pos = j;
+        }
     }
 
-    void removePoint() {
-        if (points.size() <= 4)
-            return;
-
-        points.remove(points.size() - 1);
-        segments.remove(segments.size() - 1);
-    }
-
-    public List<Point2D> getPoints() {
-        return points;
-    }
 
     public Point2D getPointAtLength(double t) {
         double[] lengths = segments.stream()
@@ -117,10 +114,18 @@ public class BSpline {
     }
 
     public void setColor(Color color) {
-        this.color = color;
+        this.color.setValue(color);
     }
 
     public Color getColor() {
-        return color;
+        return color.getValue();
+    }
+
+    public int find(Point2D pos) {
+        for (int i = 0; i < points.size(); ++i) {
+            if (points.get(i).getValue().equals(pos))
+                return i;
+        }
+        return -1;
     }
 }

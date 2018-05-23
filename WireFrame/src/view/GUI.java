@@ -1,12 +1,14 @@
 package view;
 
 import actions.IconAction;
+import model.Scene;
+import model.SceneSettings;
 import view.buttons.IconButton;
+import view.panels.SceneEditor;
 import view.panels.ScenePanel;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
-import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
@@ -17,6 +19,7 @@ import java.util.Scanner;
 
 
 public class GUI extends ToolBarStatusBarFrame {
+    private ScenePanel scenePanel = new ScenePanel(new Scene(new SceneSettings()));
     private IconAction openFile = new IconAction("open file") {
         private JFileChooser fileChooser;
         {
@@ -47,7 +50,20 @@ public class GUI extends ToolBarStatusBarFrame {
             }
         }
     };
-
+    private IconAction openSettings = new IconAction("settiongs") {
+        SceneEditor sceneEditor = new SceneEditor(scenePanel.getScene());
+        JDialog dialog = new JDialog(GUI.this, "Settings", false);
+        {
+            dialog.add(sceneEditor);
+            dialog.setMinimumSize(new Dimension(400, 400));
+            dialog.pack();
+        }
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            dialog.setLocationRelativeTo(GUI.this);
+            dialog.setVisible(true);
+        }
+    };
     private IconAction showAbout = new IconAction("about", "show info about author") {
         Container about;
         {
@@ -59,7 +75,7 @@ public class GUI extends ToolBarStatusBarFrame {
                 gbc.gridy++;
             } catch (IllegalArgumentException | IOException ignore) {
             }
-            about.add(new JLabel("Isolines ver. 1.0"), gbc);
+            about.add(new JLabel("WireFrame ver. 1.0"), gbc);
             gbc.gridy++;
             about.add(new JLabel("Bogdan Lukin"), gbc);
             gbc.gridy++;
@@ -108,7 +124,7 @@ public class GUI extends ToolBarStatusBarFrame {
 //        add(scrollPane, BorderLayout.CENTER);
 //        add(workSpace, new IsolinesPanel(model, this::setStatus), 0, 0, 1, 1);
 //        add(workSpace, BorderLayout.CENTER);
-        add(new ScenePanel(), BorderLayout.CENTER);
+        add(scenePanel, BorderLayout.CENTER);
         // TODO add main panel
     }
 
@@ -119,6 +135,7 @@ public class GUI extends ToolBarStatusBarFrame {
         toolBar.addSeparator();
 
         // TODO add edit buttons
+        toolBar.add(openSettings);
 
         toolBar.addSeparator();
 
@@ -141,6 +158,7 @@ public class GUI extends ToolBarStatusBarFrame {
         JMenu edit = new JMenu("Edit");
 
         // add edit menu items
+        edit.add(openSettings);
 
         menuBar.add(edit);
 

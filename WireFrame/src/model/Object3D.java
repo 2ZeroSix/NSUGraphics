@@ -73,15 +73,15 @@ public class Object3D {
     protected Object3D() {
         axises[0] = new Object3D.Edge(
                 new Vector4(),
-                new Vector4(0.2, 0,0), Color.RED);
+                new Vector4(1, 0,0), Color.RED);
 
         axises[1] = new Object3D.Edge(
                 new Vector4(),
-                new Vector4(0, 0.2, 0), Color.GREEN);
+                new Vector4(0, 1, 0), Color.GREEN);
 
         axises[2] = new Object3D.Edge(
                 new Vector4(),
-                new Vector4(0, 0, 0.2), Color.BLUE);
+                new Vector4(0, 0, 1), Color.BLUE);
     }
 
     protected Object3D addEdge(Edge edge) {
@@ -100,13 +100,13 @@ public class Object3D {
 //    ------   moving   ------
 
     public void rotate(double angleX, double angleY, double angleZ) {
-        Matrix4x4 Matrix4x4 = new Matrix4x4.Diagonal().rotate(angleX, angleY, angleZ);
-        rotate(Matrix4x4);
+        Matrix4x4 rotation = new Matrix4x4.Diagonal().rotate(angleX, angleY, angleZ);
+        this.rotation.mult(rotation);
     }
 
-    public void rotate(Matrix4x4 Matrix4x4) {
-        rotation.mult(Matrix4x4);
-    }
+//    public void rotate(Matrix4x4 Matrix4x4) {
+//        rotation.mult(Matrix4x4);
+//    }
 
     public void shift(Vector4 Vector4) {
         center.shift(Vector4);
