@@ -10,8 +10,8 @@ import static java.lang.Math.cos;
 import static java.lang.Math.sin;
 
 public class Matrix4x4 {
-    private double[][] mat = new double[4][4];
-    private boolean transposed = false;
+    protected double[][] mat = new double[4][4];
+    protected boolean transposed = false;
 
     public Matrix4x4 rotate(double angleX, double angleY, double angleZ) {
         return this.mult(new RotationX(angleX)).mult(new RotationY(angleY)).mult(new RotationZ(angleZ));
@@ -28,6 +28,37 @@ public class Matrix4x4 {
         }
     }
 
+    @Override
+    public String toString() {
+        StringBuilder start = new StringBuilder("Matrix4x4{" +
+                "mat=[\n");
+        for (int i = 0; i < 4; ++i) {
+            start.append(Arrays.toString(mat[i]));
+            start.append("\n");
+        }
+        return  start +
+                "], transposed=" + transposed +
+                '}';
+    }
+
+    public static class ViewPort extends Matrix4x4 {
+        public ViewPort(int displayWidth, int displayHeight, double cameraWidth, double cameraHeight) {
+            double multiplier = Math.min(displayWidth, displayHeight);
+            int width = (int) (multiplier * cameraWidth);
+            int height = (int) (multiplier * cameraHeight);
+            double scaleX = width / (2);
+            double scaleY = height / (2);
+            Matrix4x4 viewPort = (new Scale(new Vector4(scaleX, scaleY))).mult(new Shift(new Vector4(displayWidth / multiplier, displayHeight / multiplier)));
+            this.mat = viewPort.mat;
+            this.transposed = viewPort.transposed;
+        }
+    }
+
+    public static class Rotation extends Matrix4x4 {
+        public Rotation(double anglex, double angley, double anglez) {
+            super(new RotationZ(anglez).mult(new RotationY(angley)).mult(new RotationX(anglex)));
+        }
+    }
     public static class RotationX extends Matrix4x4 {
         public RotationX(double angle) {
             super(new double[][]{

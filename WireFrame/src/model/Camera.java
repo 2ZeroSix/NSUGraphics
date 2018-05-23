@@ -45,7 +45,7 @@ public class Camera extends Observable {
         });
         return orientation.mult(translation);
     }, eye, target, up);
-    public final Binding<Matrix4x4> viewProj = Bindings.createObjectBinding(() -> view.getValue().mult(proj.getValue()), view, proj);
+    public final Binding<Matrix4x4> viewProj = Bindings.createObjectBinding(() -> proj.getValue().mult(view.getValue()), view, proj);
 
 
 }

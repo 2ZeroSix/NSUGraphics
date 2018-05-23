@@ -73,15 +73,15 @@ public class Object3D {
     protected Object3D() {
         axises[0] = new Object3D.Edge(
                 new Vector4(),
-                new Vector4(1, 0,0), Color.RED);
+                new Vector4(.1, 0,0), Color.RED);
 
         axises[1] = new Object3D.Edge(
                 new Vector4(),
-                new Vector4(0, 1, 0), Color.GREEN);
+                new Vector4(0, .1, 0), Color.GREEN);
 
         axises[2] = new Object3D.Edge(
                 new Vector4(),
-                new Vector4(0, 0, 1), Color.BLUE);
+                new Vector4(0, 0, .1), Color.BLUE);
     }
 
     protected Object3D addEdge(Edge edge) {

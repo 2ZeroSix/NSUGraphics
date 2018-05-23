@@ -128,4 +128,11 @@ public class Vector4 {
     public double getW() {
         return p[3];
     }
+
+    @Override
+    public String toString() {
+        return "Vector4{" +
+                "p=" + Arrays.toString(p) +
+                '}';
+    }
 }

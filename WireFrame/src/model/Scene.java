@@ -13,38 +13,45 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class Scene {
     private Camera camera = new Camera();
     public final ListProperty<Object3D> object3DS = new SimpleListProperty<>(new ObservableListWrapper<>(new ArrayList<>()));
     private final SceneSettings settings;
-    public final Property<Dimension> viewPort = new SimpleObjectProperty<>(new Dimension(800, 600));
+    public final Property<Dimension> displaySize = new SimpleObjectProperty<>(new Dimension(800, 600));
+    public final Binding<Matrix4x4.ViewPort> viewPort = Bindings.createObjectBinding(() -> new Matrix4x4.ViewPort(displaySize.getValue().width, displaySize.getValue().height, camera.frontWidth.get(), camera.frontHeight.get()),
+            camera.frontWidth, camera.frontHeight, displaySize);
     public final Binding<BufferedImage> canvas;
 
     public Scene(SceneSettings settings) {
         this.settings = settings;
+        Matrix4x4.Rotation globalRotation = new Matrix4x4.Rotation(Math.PI / 4, Math.PI / 4, Math.PI / 4);
         canvas = Bindings.createObjectBinding(() -> {
-                    Dimension size = viewPort.getValue();
-                    BufferedImage image = new BufferedImage(size.width, size.height, BufferedImage.TYPE_INT_ARGB);
+                    Dimension size = displaySize.getValue();
                     System.gc();
-                    Graphics2D g = image.createGraphics();
-                    g.setColor(settings.backgroundColor.getValue());
-                    g.fillRect(0, 0, size.width - 1, size.height - 1);
                     double multiplier = Math.min(size.width, size.height);
                     if (multiplier <= 0)
-                        return image;
+                        return new BufferedImage(size.width, size.height, BufferedImage.TYPE_INT_ARGB);
 
                     int width = (int) (multiplier * camera.frontWidth.get());
                     int height = (int) (multiplier * camera.frontHeight.get());
+                    BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+                    Graphics2D g = image.createGraphics();
+                    g.setColor(settings.backgroundColor.getValue());
+                    g.fillRect(0, 0, width - 1, height - 1);
                     double scaleX = width / (2);
                     double scaleY = height / (2);
                     object3DS.forEach(object3D -> {
-                        Matrix4x4 world = object3D.getWorldMatrix();
-                        Matrix4x4 wvp = world.mult(camera.viewProj.getValue());
+                        Matrix4x4 world = object3D.getWorldMatrix().mult(globalRotation);
+                        Matrix4x4 wvp = camera.viewProj.getValue().mult(world);
+                        System.out.println("world: " + world);
+                        System.out.println("view:  " + camera.view.getValue());
+                        System.out.println("proj:  " + camera.proj.getValue());
+                        System.out.println("vp:    " + camera.viewProj.getValue());
+                        System.out.println("wvp:   " + wvp);
                         object3D.getEdges().forEach(edge -> {
-                            Vector4 start = wvp.mult(edge.getPoints()[0]);
-                            Vector4 end = wvp.mult(edge.getPoints()[1]);
+                            Vector4 start = wvp.mult(edge.getPoints()[0]).normalizeAs3D();
+                            Vector4 end = wvp.mult(edge.getPoints()[1]).normalizeAs3D();
                             int x1 = (int) Math.round((start.getX() + 1) * scaleX);
                             int y1 = (int) Math.round((start.getY() + 1) * scaleY);
                             int x2 = (int) Math.round((end.getX() + 1) * scaleX);
@@ -58,12 +65,12 @@ public class Scene {
                 settings.c, settings.d,
                 settings.n, settings.m, settings.k,
                 settings.backgroundColor, settings.legendColor,
-                camera.viewProj, viewPort, object3DS);
+                camera.viewProj, displaySize, object3DS);
         settings.zn.bindBidirectional(camera.frontClip);
         settings.zf.bindBidirectional(camera.backClip);
         settings.sw.bindBidirectional(camera.frontWidth);
         settings.sh.bindBidirectional(camera.frontHeight);
-        object3DS.add(Object3D.getBrick(0.1, .1, .1));
+        object3DS.add(Object3D.getBrick(1, 1, 1));
     }
 
     public BSpline3D addBSpline() {

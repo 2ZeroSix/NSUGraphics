@@ -4,24 +4,16 @@ import javafx.beans.property.Property;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.ListChangeListener;
-import javafx.scene.control.Spinner;
 import model.BSpline3D;
 import model.Object3D;
 import model.Scene;
 import model.SceneSettings;
-import sun.plugin.com.DispatchClient;
 
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import java.awt.*;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.util.List;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 public class SceneEditor extends JPanel {
     private SceneSettings settings;

@@ -3,9 +3,6 @@ package model;
 import javafx.beans.property.*;
 
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
 
 public class SceneSettings {
     final private BooleanProperty showSettings;
