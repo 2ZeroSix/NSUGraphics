@@ -75,7 +75,7 @@ public class Vector4 {
 
     public Vector4 normalize() {
         Vector4 result = this.clone();
-        for (int i = 0; i < 3; ++i)
+        for (int i = 0; i < 4; ++i)
             result.p[i] /= p[3];
         return result;
     }

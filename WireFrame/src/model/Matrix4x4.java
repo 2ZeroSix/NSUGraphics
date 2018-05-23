@@ -48,7 +48,7 @@ public class Matrix4x4 {
             int height = (int) (multiplier * cameraHeight);
             double scaleX = width / (2);
             double scaleY = height / (2);
-            Matrix4x4 viewPort = (new Scale(new Vector4(scaleX, scaleY))).mult(new Shift(new Vector4(displayWidth / multiplier, displayHeight / multiplier)));
+            Matrix4x4 viewPort = (new Scale(new Vector4(scaleX, scaleY))).mult(new Shift(new Vector4(1, 1)));
             this.mat = viewPort.mat;
             this.transposed = viewPort.transposed;
         }

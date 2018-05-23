@@ -9,6 +9,7 @@ import javafx.beans.property.SimpleListProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
 import java.awt.*;
+import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,20 +45,25 @@ public class Scene {
                     object3DS.forEach(object3D -> {
                         Matrix4x4 world = object3D.getWorldMatrix().mult(globalRotation);
                         Matrix4x4 wvp = camera.viewProj.getValue().mult(world);
-                        System.out.println("world: " + world);
-                        System.out.println("view:  " + camera.view.getValue());
-                        System.out.println("proj:  " + camera.proj.getValue());
-                        System.out.println("vp:    " + camera.viewProj.getValue());
-                        System.out.println("wvp:   " + wvp);
+//                        System.out.println("world: " + world);
+//                        System.out.println("view:  " + camera.view.getValue());
+//                        System.out.println("proj:  " + camera.proj.getValue());
+//                        System.out.println("vp:    " + camera.viewProj.getValue());
+//                        System.out.println("wvp:   " + wvp);
                         object3D.getEdges().forEach(edge -> {
-                            Vector4 start = wvp.mult(edge.getPoints()[0]).normalizeAs3D();
-                            Vector4 end = wvp.mult(edge.getPoints()[1]).normalizeAs3D();
-                            int x1 = (int) Math.round((start.getX() + 1) * scaleX);
-                            int y1 = (int) Math.round((start.getY() + 1) * scaleY);
-                            int x2 = (int) Math.round((end.getX() + 1) * scaleX);
-                            int y2 = (int) Math.round((end.getY() + 1) * scaleY);
-                            g.setColor(edge.getColor());
-                            g.drawLine(x1, y1, x2, y2);
+                            Vector4 start = wvp.mult(edge.getPoints()[0]).normalize();
+                            Vector4 end = wvp.mult(edge.getPoints()[1]).normalize();
+                            Point2D.Double[] p = projectEdge(start, end);
+                            if (p != null) {
+                                Vector4 from = viewPort.getValue().mult(new Vector4(p[0].getX(), p[0].getY()));
+                                Vector4 to = viewPort.getValue().mult(new Vector4(p[1].getX(), p[1].getY()));
+                                int x1 = (int) Math.round((from.getX()));
+                                int y1 = (int) Math.round((from.getY()));
+                                int x2 = (int) Math.round((to.getX()));
+                                int y2 = (int) Math.round((to.getY()));
+                                g.setColor(edge.getColor());
+                                g.drawLine(x1, y1, x2, y2);
+                            }
                         });
                     });
                     return image;
@@ -71,6 +77,46 @@ public class Scene {
         settings.sw.bindBidirectional(camera.frontWidth);
         settings.sh.bindBidirectional(camera.frontHeight);
         object3DS.add(Object3D.getBrick(1, 1, 1));
+    }
+
+    private Point2D.Double[] projectEdge(Vector4 start, Vector4 end) {
+        double[] x = { start.getX(), end.getX() };
+        double[] y = { start.getY(), end.getY() };
+        double[] z = { start.getZ(), end.getZ() };
+
+        try {
+            clipping(x, y, z, -1, 1);
+            clipping(y, x, z, -1, 1);
+            clipping(z, x, y, 1, 2);
+        } catch (Exception e) {
+            return null;
+        }
+
+        return new Point2D.Double[]{ new Point2D.Double(x[0], y[0]), new Point2D.Double(x[1], y[1]) };
+    }
+
+    private void clipping(double[] main, double[] off1, double[] off2,
+                          double min, double max) throws Exception {
+        if (main[0] < min && main[1] < min || main[0] > max && main[1] > max) {
+            throw new Exception();
+        }
+
+        int iMin = (main[0] < main[1]) ? 0 : 1;
+        int iMax = 1 - iMin;
+
+        if (main[iMin] < min) {
+            double k = (main[iMin] - min) / (main[1] - main[0]);
+            main[iMin] = min;
+            off1[iMin] = off1[iMin] + k * (off1[1] - off1[0]);
+            off2[iMin] = off2[iMin] + k * (off2[1] - off2[0]);
+        }
+
+        if (main[iMax] > max) {
+            double k = (main[iMax] - max) / (main[1] - main[0]);
+            main[iMax] = max;
+            off1[iMax] = off1[iMax] - k * (off1[1] - off1[0]);
+            off2[iMax] = off2[iMax] - k * (off2[1] - off2[0]);
+        }
     }
 
     public BSpline3D addBSpline() {
@@ -88,11 +134,6 @@ public class Scene {
                 .filter(object3D -> object3D instanceof BSpline3D)
                 .map(o -> (BSpline3D) o)
                 .collect(Collectors.toList());
-    }
-
-    public void draw(Graphics2D g) {
-
-//        return canvas;
     }
 
     public SceneSettings getSettings() {

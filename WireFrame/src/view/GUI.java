@@ -55,7 +55,7 @@ public class GUI extends ToolBarStatusBarFrame {
         JDialog dialog = new JDialog(GUI.this, "Settings", false);
         {
             dialog.add(sceneEditor);
-            dialog.setMinimumSize(new Dimension(400, 400));
+            dialog.setMinimumSize(new Dimension(500, 500));
             dialog.pack();
         }
         @Override
