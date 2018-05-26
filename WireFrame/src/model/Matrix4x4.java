@@ -14,7 +14,7 @@ public class Matrix4x4 {
     protected boolean transposed = false;
 
     public Matrix4x4 rotate(double angleX, double angleY, double angleZ) {
-        return this.mult(new RotationX(angleX)).mult(new RotationY(angleY)).mult(new RotationZ(angleZ));
+        return new Rotation(angleX, angleY, angleZ).mult(this);
     }
 
     public static class Diagonal extends Matrix4x4{
@@ -44,8 +44,15 @@ public class Matrix4x4 {
     public static class ViewPort extends Matrix4x4 {
         public ViewPort(int displayWidth, int displayHeight, double cameraWidth, double cameraHeight) {
             double multiplier = Math.min(displayWidth, displayHeight);
-            int width = (int) (multiplier * cameraWidth);
-            int height = (int) (multiplier * cameraHeight);
+            double width = (multiplier * cameraWidth / Math.max(cameraWidth, cameraHeight));
+            double height = (multiplier * cameraHeight / Math.max(cameraWidth, cameraHeight));
+            if ((double)displayWidth / width <= (double)displayHeight / height) {
+                height *= displayWidth / width;
+                width *= displayWidth / width;
+            } else {
+                width *= displayHeight / height;
+                height *= displayHeight / height;
+            }
             double scaleX = width / (2);
             double scaleY = height / (2);
             Matrix4x4 viewPort = (new Scale(new Vector4(scaleX, scaleY))).mult(new Shift(new Vector4(1, 1)));

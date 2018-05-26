@@ -3,10 +3,11 @@ package view.panels;
 import model.*;
 
 import javax.swing.*;
-import javax.swing.border.StrokeBorder;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
+import java.util.HashSet;
+import java.util.Set;
 
 public class ScenePanel extends JPanel {
     public Scene getScene() {
@@ -22,6 +23,89 @@ public class ScenePanel extends JPanel {
             @Override
             public void componentResized(ComponentEvent e) {
                 scene.displaySize.setValue(new Dimension(getWidth() - 7, getHeight() - 7));
+            }
+        });
+        addMouseWheelListener(e -> {
+            SceneSettings settings = scene.getSettings();
+            double step = - e.getWheelRotation() * 0.1;
+            step = Math.min(settings.zf.get() + step, 20.) - settings.zf.get();
+            step = Math.max(settings.zn.get() + step, 0) - settings.zn.get();
+            settings.zn.set(settings.zn.get() + step);
+            settings.zf.set(settings.zf.get() + step);
+        });
+
+        int[] mouseX = { 0 };
+        int[] mouseY = { 0 };
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                grabFocus();
+
+                mouseX[0] = e.getX();
+                mouseY[0] = e.getY();
+            }
+        });
+        addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                double angleX = (mouseX[0] - e.getX()) * (Math.PI / 500);
+                double angleY = (e.getY() - mouseY[0]) * (Math.PI / 500);
+                BSpline3D selected = scene.selected.getValue();
+                if (selected == null) {
+                    scene.globalRotation.setValue(scene.globalRotation.getValue().rotate(angleY, -angleX, 0));
+                } else {
+                    selected.viewSpaceRotation.setValue(selected.viewSpaceRotation.getValue().rotate(angleY, -angleX, 0));
+                }
+
+
+                mouseX[0] = e.getX();
+                mouseY[0] = e.getY();
+            }
+        });
+
+        addKeyListener(new KeyAdapter() {
+            private final Set<Character> pressed = new HashSet<>();
+
+
+            @Override
+            public synchronized void keyReleased(KeyEvent e) {
+                pressed.remove(e.getKeyChar());
+            }
+            @Override
+            public synchronized void keyPressed(KeyEvent e) {
+                pressed.add(e.getKeyChar());
+                if (pressed.size() <= 0) return;
+                Object3D selected = scene.selected.getValue();
+                if (selected == null)
+                    return;
+                for (Character key : pressed) {
+
+                    double step = 0.1;
+                    Vector4 shift;
+                    switch (key) {
+                        case '6':
+                            shift = new Vector4(step, 0, 0);
+                            break;
+                        case '4':
+                            shift = new Vector4(-step, 0, 0);
+                            break;
+                        case '8':
+                            shift = new Vector4(0, step, 0);
+                            break;
+                        case '2':
+                            shift = new Vector4(0, -step, 0);
+                            break;
+                        case '7':
+                            shift = new Vector4(0, 0, -step);
+                            break;
+                        case '9':
+                            shift = new Vector4(0, 0, step);
+                            break;
+                        default:
+                            shift = new Vector4(0, 0, 0);
+                    }
+                    selected.center.setValue(new Matrix4x4.Shift(shift).mult(selected.center.getValue()));
+                }
             }
         });
     }

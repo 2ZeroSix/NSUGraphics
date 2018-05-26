@@ -4,22 +4,21 @@ import javafx.beans.property.Property;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.ListChangeListener;
-import model.BSpline3D;
-import model.Object3D;
-import model.Scene;
-import model.SceneSettings;
+import model.*;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.util.List;
 
 public class SceneEditor extends JPanel {
     private SceneSettings settings;
     private Scene scene;
     JTabbedPane tabbedPane = new JTabbedPane();
-
+    public BSpline3D getSelected() {
+        if (tabbedPane.getTabCount() == 1) return null;
+        return (BSpline3D) scene.object3DS.stream().filter(o -> o instanceof BSpline3D).skip(tabbedPane.getSelectedIndex()).findFirst().orElse(null);
+    }
     public SceneEditor(Scene scene) {
         this.scene = scene;
         this.settings = scene.getSettings();
@@ -60,17 +59,17 @@ public class SceneEditor extends JPanel {
         {
             gbc.gridx = 0;
             gbc.gridy = 1;
-            panel.add(createSpinnerBox("n", settings.n, new SimpleIntegerProperty(1), new SimpleIntegerProperty(30), 1), gbc);
+            panel.add(createSpinnerBox("n", settings.n, new SimpleIntegerProperty(1), new SimpleIntegerProperty(50), 1), gbc);
         }
         {
             gbc.gridx = 1;
             gbc.gridy = 1;
-            panel.add(createSpinnerBox("m", settings.m, new SimpleIntegerProperty(1), new SimpleIntegerProperty(30), 1), gbc);
+            panel.add(createSpinnerBox("m", settings.m, new SimpleIntegerProperty(1), new SimpleIntegerProperty(50), 1), gbc);
         }
         {
             gbc.gridx = 2;
             gbc.gridy = 1;
-            panel.add(createSpinnerBox("k", settings.k, new SimpleIntegerProperty(0), new SimpleIntegerProperty(10), 1), gbc);
+            panel.add(createSpinnerBox("k", settings.k, new SimpleIntegerProperty(1), new SimpleIntegerProperty(50), 1), gbc);
         }
         {
             JButton button = new JButton("spline color");
@@ -133,22 +132,22 @@ public class SceneEditor extends JPanel {
         {
             gbc.gridx = 0;
             gbc.gridy = 3;
-            panel.add(createSpinnerBox("zn", settings.zn, new SimpleDoubleProperty(0), settings.zf, .01), gbc);
+            panel.add(createSpinnerBox("zn", settings.zn, new SimpleDoubleProperty(0), settings.zf, .1), gbc);
         }
         {
             gbc.gridx = 1;
             gbc.gridy = 3;
-            panel.add(createSpinnerBox("zf", settings.zf, settings.zn, new SimpleDoubleProperty(100), .01), gbc);
+            panel.add(createSpinnerBox("zf", settings.zf, settings.zn, new SimpleDoubleProperty(20), .1), gbc);
         }
         {
             gbc.gridx = 2;
             gbc.gridy = 3;
-            panel.add(createSpinnerBox("sw", settings.sw, new SimpleDoubleProperty(0), new SimpleDoubleProperty(100), .01), gbc);
+            panel.add(createSpinnerBox("sw", settings.sw, new SimpleDoubleProperty(10e-6), new SimpleDoubleProperty(10), .1), gbc);
         }
         {
             gbc.gridx = 3;
             gbc.gridy = 3;
-            panel.add(createSpinnerBox("sh", settings.sh, new SimpleDoubleProperty(0), new SimpleDoubleProperty(100), .01), gbc);
+            panel.add(createSpinnerBox("sh", settings.sh, new SimpleDoubleProperty(10e-6), new SimpleDoubleProperty(10), .1), gbc);
         }
         {
             JButton button = new JButton("points color");
@@ -171,21 +170,21 @@ public class SceneEditor extends JPanel {
         setSize(new Dimension(400, 400));
     }
 
-    private Box createSpinnerBox(String name, Property<Number> val, Property<Number> min, Property<Number> max, Number step) {
+    private  Box createSpinnerBox(String name, Property<Number> val, Property<Number> min, Property<Number> max, Number step) {
         Box box = new Box(BoxLayout.LINE_AXIS);
         box.add(new JLabel(name));
         SpinnerNumberModel model;
-        if (min.getValue() instanceof Integer) {
-            model = new SpinnerNumberModel(val.getValue(), min.getValue().intValue(), max.getValue().intValue(), step);
+        if (val.getValue() instanceof Integer) {
+            model = new SpinnerNumberModel(val.getValue().intValue(), min.getValue().intValue(), max.getValue().intValue(), step.intValue());
         } else {
-            model = new SpinnerNumberModel(val.getValue(), min.getValue().doubleValue(), max.getValue().doubleValue(), step);
+            model = new SpinnerNumberModel(val.getValue().doubleValue(), min.getValue().doubleValue(), max.getValue().doubleValue(), step.doubleValue());
         }
         JSpinner spinner = new JSpinner(model);
         box.add(spinner);
         val.addListener((observable, oldValue, newValue) -> model.setValue(newValue));
-        model.addChangeListener(e -> val.setValue((Number) model.getValue()));
-        min.addListener((o, old, newV) -> model.setMinimum(newV.doubleValue()));
-        max.addListener((o, old, newV) -> model.setMaximum(newV.doubleValue()));
+        spinner.addChangeListener(e -> val.setValue(model.getNumber()));
+        min.addListener((o, old, newV) -> model.setMinimum((Comparable) newV));
+        max.addListener((o, old, newV) -> model.setMaximum((Comparable) newV));
         return box;
     }
 
@@ -203,10 +202,12 @@ public class SceneEditor extends JPanel {
                 public void mouseClicked(MouseEvent e) {
                     if (SwingUtilities.isLeftMouseButton(e)) {
                         tabbedPane.setSelectedIndex(finalI);
+                        scene.selected.setValue(getSelected());
                     } else if (SwingUtilities.isMiddleMouseButton(e)) {
                         int previousSelected = tabbedPane.getSelectedIndex();
                         scene.removeBSpline(finalI);
                         tabbedPane.setSelectedIndex(Math.max(0, previousSelected - (finalI <= previousSelected ? 1 : 0)));
+                        scene.selected.setValue(getSelected());
                     }
                 }
             });
@@ -220,6 +221,7 @@ public class SceneEditor extends JPanel {
             public void mouseClicked(MouseEvent e) {
                 scene.addBSpline();
                 tabbedPane.setSelectedIndex(tabbedPane.getTabCount() - 2);
+                scene.selected.setValue(getSelected());
             }
         });
         tabbedPane.setTabComponentAt(tabbedPane.getTabCount() - 1, label);

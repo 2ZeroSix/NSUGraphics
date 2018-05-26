@@ -6,6 +6,7 @@ import javafx.beans.property.ListProperty;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleListProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ObservableValueBase;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
@@ -13,7 +14,7 @@ import java.util.*;
 import java.util.List;
 import java.util.stream.Stream;
 
-public class BSpline {
+public class BSpline extends java.util.Observable {
     {
         Random random = new Random();
         color = new SimpleObjectProperty<>(new Color(random.nextInt(255),
@@ -24,8 +25,10 @@ public class BSpline {
     final public ListProperty<Property<Point2D>> points = new SimpleListProperty<>(new ObservableListWrapper<>(new ArrayList<>(), param -> new Observable[]{param}));
     final public ListProperty<Segment> segments = new SimpleListProperty<>(new ObservableListWrapper<>(new ArrayList<>()));
     {
-
+        color.addListener((observable, oldValue, newValue) -> {setChanged(); notifyObservers();});
     }
+
+
     class Segment {
 
         private final static int LENGTH_COUNT = 20;
@@ -74,11 +77,14 @@ public class BSpline {
 
     public void addPoint(Point2D point) {
         points.add(new SimpleObjectProperty<>(point));
-
-        if (points.getValue().size() < 4)
+        points.get(points.getSize() - 1).addListener((observable, oldValue, newValue) -> {setChanged(); notifyObservers();});
+        if (points.getValue().size() < 4) {
+            setChanged(); notifyObservers();
             return;
+        }
         int i = points.getValue().size() - 4;
         segments.add(new Segment(i));
+        setChanged(); notifyObservers();
     }
 
     public void removePoint(Point2D p) {
@@ -88,17 +94,21 @@ public class BSpline {
     public void removePoint(int i) {
         if (i < 0) return;
         points.remove(i);
-        if (segments.size() <= 0)
+        if (segments.size() <= 0) {
+            setChanged(); notifyObservers();
             return;
 
+        }
         segments.remove(Integer.max(i - 3, 0));
         for (int j = Integer.max(i - 4, 0); j < segments.size(); ++j) {
             segments.get(j).pos = j;
         }
+        setChanged(); notifyObservers();
     }
 
 
     public Point2D getPointAtLength(double t) {
+        if (segments.size() <= 0) return  new Point2D.Double();
         double[] lengths = segments.stream()
                 .mapToDouble(Segment::getLength)
                 .toArray();
@@ -108,7 +118,6 @@ public class BSpline {
         int k = 0;
         while (k < lengths.length - 1 && pos > lengths[k])
             pos -= lengths[k++];
-
         Segment segment = segments.get(k);
         return segment.getP(pos / lengths[k]);
     }

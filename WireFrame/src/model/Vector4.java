@@ -65,8 +65,8 @@ public class Vector4 {
     }
 
     public Vector4 normalizeAs3D() {
-        Vector4 result = clone();
-        double len = len();
+        Vector4 result = normalize();
+        double len = result.len();
         for (int i = 0; i < 3; ++i)
             result.p[i] /= len;
         result.p[3] = 1;
@@ -108,9 +108,10 @@ public class Vector4 {
         return Arrays.hashCode(p);
     }
 
-    public void shift(Vector4 vector4) {
-        Vector4 v = new Matrix4x4.Shift(vector4).mult(this);
+    public Vector4 shift(Vector4 vector4) {
+        Vector4 v = new Matrix4x4.Shift(vector4.normalize()).mult(this);
         p = v.p;
+        return v;
     }
 
     public double getX() {

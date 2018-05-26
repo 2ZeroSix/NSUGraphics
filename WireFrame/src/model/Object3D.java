@@ -1,5 +1,11 @@
 package model;
 
+import com.sun.javafx.collections.ObservableListWrapper;
+import javafx.beans.property.ListProperty;
+import javafx.beans.property.Property;
+import javafx.beans.property.SimpleListProperty;
+import javafx.beans.property.SimpleObjectProperty;
+
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -7,7 +13,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class Object3D {
+public class Object3D extends java.util.Observable {
 
     protected static class Edge {
         private Vector4[] points = new Vector4[2];
@@ -38,12 +44,20 @@ public class Object3D {
         }
     }
 
-    private Matrix4x4 scale = new Matrix4x4.Diagonal();
-    private Matrix4x4 rotation = new Matrix4x4.Diagonal();
-    private Vector4 center = new Vector4();
-
+    public final Property<Matrix4x4> scale = new SimpleObjectProperty<>(new Matrix4x4.Diagonal());
+    public final Property<Matrix4x4> rotation = new SimpleObjectProperty<>(new Matrix4x4.Diagonal());
+    public final Property<Matrix4x4> viewSpaceRotation = new SimpleObjectProperty<>(new Matrix4x4.Diagonal());
+    public final Property<Vector4> center = new SimpleObjectProperty<>(new Vector4());
+    public final Property<Vector4> viewSpaceCenter = new SimpleObjectProperty<>(new Vector4());
+    {
+        scale.addListener((observable, oldValue, newValue) -> {setChanged();notifyObservers();});
+        rotation.addListener((observable, oldValue, newValue) -> {setChanged();notifyObservers();});
+        viewSpaceRotation.addListener((observable, oldValue, newValue) -> {setChanged();notifyObservers();});
+        center.addListener((observable, oldValue, newValue) -> {setChanged();notifyObservers();});
+        viewSpaceCenter.addListener((observable, oldValue, newValue) -> {setChanged();notifyObservers();});
+    }
     private Edge[] axises = new Edge[3];
-    private ArrayList<Edge> edges = new ArrayList<>();
+    public final ListProperty<Edge> edges = new SimpleListProperty<>(new ObservableListWrapper<>(new ArrayList<>()));
 
     public static Object3D getBrick(double sizeX, double sizeY, double sizeZ) {
         Vector4 p000 = new Vector4( sizeX,  sizeY,  sizeZ);
@@ -97,32 +111,25 @@ public class Object3D {
         edges.clear();
     }
 
-//    ------   moving   ------
 
     public void rotate(double angleX, double angleY, double angleZ) {
-        Matrix4x4 rotation = new Matrix4x4.Diagonal().rotate(angleX, angleY, angleZ);
-        this.rotation.mult(rotation);
+        this.rotation.setValue(this.rotation.getValue().rotate(angleX, angleY, angleZ));
     }
 
-//    public void rotate(Matrix4x4 Matrix4x4) {
-//        rotation.mult(Matrix4x4);
-//    }
-
-    public void shift(Vector4 Vector4) {
-        center.shift(Vector4);
+    public void shift(Vector4 vector4) {
+        this.center.setValue(this.center.getValue().shift(vector4));
     }
 
-//    ------   get data   ------
 
     public Vector4[] getMinMaxPoints() {
-        double[] minMaxX = { center.getX(), center.getX() };
-        double[] minMaxY = { center.getY(), center.getY() };
-        double[] minMaxZ = { center.getZ(), center.getZ() };
+        double[] minMaxX = { center.getValue().getX(), center.getValue().getX() };
+        double[] minMaxY = { center.getValue().getY(), center.getValue().getY() };
+        double[] minMaxZ = { center.getValue().getZ(), center.getValue().getZ() };
 
         edges.stream()
                 .flatMap(edge -> Arrays.stream(edge.getPoints()))
                 .forEach(Vector4 -> {
-                    Vector4 __Vector4 = rotation.mult(new Matrix4x4.Shift(center)).mult(Vector4);
+                    Vector4 __Vector4 = getWorldMatrix().mult(Vector4);
 
                     minMaxX[0] = Double.min(__Vector4.getX(), minMaxX[0]);
                     minMaxX[1] = Double.max(__Vector4.getX(), minMaxX[1]);
@@ -145,14 +152,14 @@ public class Object3D {
     }
 
     public Matrix4x4 getRotation() {
-        return rotation;
+        return rotation.getValue();
     }
 
     public Vector4 getCenter() {
-        return center;
+        return center.getValue();
     }
 
     Matrix4x4 getWorldMatrix() {
-        return scale.mult(new Matrix4x4.Shift(center)).mult(rotation);
+        return scale.getValue().mult(new Matrix4x4.Shift(viewSpaceCenter.getValue())).mult(new Matrix4x4.Shift(center.getValue())).mult(rotation.getValue());
     }
 }

@@ -48,12 +48,12 @@ public class SplineEditor extends JPanel implements MouseListener, MouseMotionLi
 
     private Point2D cast(Point g2) {
         return new Point2D.Double((g2.x) * (2 * fieldSize.x) / (getWidth()) - fieldSize.x,
-                (g2.y) * (2 * fieldSize.y) / (getHeight()) - fieldSize.y);
+                -(g2.y) * (2 * fieldSize.y) / (getHeight()) + fieldSize.y);
     }
 
     private Point cast(Point2D g2) {
         return new Point((int) (((g2.getX() + fieldSize.x) / (2 * fieldSize.x)) * (getWidth())),
-                (int) ((g2.getY() + fieldSize.y) / (2 * fieldSize.y) * (getHeight())));
+                (int) ((-g2.getY() + fieldSize.y) / (2 * fieldSize.y) * (getHeight())));
     }
 
     @Override
