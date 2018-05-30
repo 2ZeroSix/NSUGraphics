@@ -9,6 +9,11 @@ public enum ImageUtils {;
         if (source.getHeight(null) != destination.getHeight() || source.getWidth(null) != destination.getWidth()) {
             return copy(source);
         }
+        for (int x = 0; x < destination.getWidth(); ++x) {
+            for (int y = 0; y < destination.getHeight(); ++y) {
+                destination.setRGB(x, y, 0);
+            }
+        }
         Graphics2D g = destination.createGraphics();
         g.drawImage(source, 0, 0, null);
         g.dispose();
@@ -46,6 +51,6 @@ public enum ImageUtils {;
     }
 
     public static int negativePixel(int p) {
-        return (p & 0xFF000000) |  ((255 - ((p >> 16) & 0xFF)) << 16) |  ((255 - ((p >> 8) & 0xFF)) << 8) |  (255 - ((p) & 0xFF));
+        return (0xFF000000) |  ((255 - ((p >> 16) & 0xFF)) << 16) |  ((255 - ((p >> 8) & 0xFF)) << 8) |  (255 - ((p) & 0xFF));
     }
 }

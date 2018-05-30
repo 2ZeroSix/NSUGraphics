@@ -323,7 +323,7 @@ public class GUI extends ToolBarStatusBarFrame {
                 about.add(new JLabel(new ImageIcon(ImageIO.read(getClass().getResource("/me.png")))));
             } catch (IOException e) {
             }
-            about.add(new JLabel("Life ver. 1.0"));
+            about.add(new JLabel("Filter ver. 1.0"));
             about.add(new JLabel("Bogdan Lukin"));
             about.add(new JLabel("FIT 15206"));
             dialogs.put("about", about);
