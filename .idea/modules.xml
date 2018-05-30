@@ -5,6 +5,7 @@
       <module fileurl="file://$PROJECT_DIR$/Filter/Filter.iml" filepath="$PROJECT_DIR$/Filter/Filter.iml" />
       <module fileurl="file://$PROJECT_DIR$/Isolines/Isolines.iml" filepath="$PROJECT_DIR$/Isolines/Isolines.iml" />
       <module fileurl="file://$PROJECT_DIR$/Life/Life.iml" filepath="$PROJECT_DIR$/Life/Life.iml" />
+      <module fileurl="file://$PROJECT_DIR$/WireFrame/WireFrame.iml" filepath="$PROJECT_DIR$/WireFrame/WireFrame.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/g15206_lukin.iml" filepath="$PROJECT_DIR$/.idea/g15206_lukin.iml" />
     </modules>
   </component>
